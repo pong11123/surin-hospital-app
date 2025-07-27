@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกข้อมูลตรวจเช็ค รพ.สุรินทร์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f1f5f9; /* bg-slate-100 */
+        }
+        .form-select, .form-input, .form-textarea {
+            @apply w-full px-4 py-2 text-slate-700 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 transition-shadow;
+        }
+        .btn {
+            @apply w-full px-5 py-3 font-bold text-white rounded-lg transition-all duration-300 transform hover:scale-[1.03] shadow-md hover:shadow-lg flex items-center justify-center;
+        }
+        .btn-secondary { @apply bg-slate-500 hover:bg-slate-600 text-white; }
+        .page { display: none; animation: fadeIn 0.5s; }
+        .page.active { display: block; }
+        .hidden { display: none; }
+        .loader {
+            @apply border-4 border-t-4 border-gray-200 rounded-full w-12 h-12 animate-spin;
+        }
+        .modal-enter { animation: modal-in 0.3s ease-out; }
+        .modal-leave { animation: modal-out 0.3s ease-in; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes modal-out {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+
+        /* Custom Radio Button */
+        .custom-radio label {
+            @apply px-4 py-2 border border-slate-300 bg-white rounded-lg cursor-pointer transition-all duration-200 text-slate-700;
+        }
+        .custom-radio input[type="radio"] {
+            display: none;
+        }
+
+        /* Blue Theme for Generator */
+        .theme-blue .custom-radio input[type="radio"]:checked + label { @apply bg-blue-600 text-white border-blue-600 shadow-md font-semibold; }
+        .theme-blue .btn-primary { @apply bg-blue-600 hover:bg-blue-700; }
+        .theme-blue .form-input:focus, .theme-blue .form-select:focus, .theme-blue .form-textarea:focus { @apply ring-blue-500; }
+        .theme-blue.border-t-4 { @apply border-blue-500; }
+        .theme-blue .loader { @apply border-t-blue-600; }
+
+        /* Teal Theme for Pump */
+        .theme-teal .custom-radio input[type="radio"]:checked + label { @apply bg-teal-600 text-white border-teal-600 shadow-md font-semibold; }
+        .theme-teal .btn-primary { @apply bg-teal-600 hover:bg-teal-700; }
+        .theme-teal .form-input:focus, .theme-teal .form-select:focus, .theme-teal .form-textarea:focus { @apply ring-teal-500; }
+        .theme-teal.border-t-4 { @apply border-teal-500; }
+        .theme-teal .loader { @apply border-t-teal-600; }
+
+        /* Orange Theme for Repair */
+        .theme-orange .btn-primary { @apply bg-orange-500 hover:bg-orange-600; }
+        .theme-orange .form-input:focus, .theme-orange .form-select:focus, .theme-orange .form-textarea:focus { @apply ring-orange-500; }
+        .theme-orange.border-t-4 { @apply border-orange-500; }
+        .theme-orange .loader { @apply border-t-orange-600; }
+    </style>
+</head>
+<body class="bg-slate-100">
+
+    <!-- Main App Container -->
+    <div id="main-app" class="container mx-auto max-w-4xl p-4 md:p-6">
+
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <i class="fas fa-hospital text-6xl text-slate-700 mb-4"></i>
+            <h1 class="text-4xl font-bold text-slate-800">ระบบบันทึกข้อมูลช่าง</h1>
+            <p class="text-slate-500 text-lg mt-1">โรงพยาบาลสุรินทร์</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="bg-white shadow-md rounded-xl p-2 mb-8 flex justify-center items-stretch gap-2">
+            <button data-page="home" class="nav-btn flex-1 text-center py-3 px-4 rounded-lg font-semibold text-slate-700 bg-slate-100 transition-all"><i class="fas fa-home mr-2"></i>หน้าหลัก</button>
+            <a id="view-sheet-btn" href="#" target="_blank" class="nav-btn flex-1 text-center py-3 px-4 rounded-lg font-semibold text-slate-600 hover:bg-slate-100 transition-all flex items-center justify-center"><i class="fas fa-table mr-2"></i>ดูข้อมูลใน Sheet</a>
+        </nav>
+
+        <!-- Page: Home -->
+        <main id="home" class="page active">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-slate-400">
+                <h2 class="text-2xl font-semibold text-center text-slate-800 mb-8">เลือกประเภทการบันทึก</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <button id="show-generator-form" class="bg-white text-slate-700 p-6 rounded-xl shadow-lg border-2 border-transparent hover:border-blue-500 hover:shadow-xl flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1">
+                        <i class="fas fa-bolt fa-3x mb-4 text-blue-500"></i>
+                        <span class="text-lg font-bold">ตรวจเช็คเครื่องไฟ</span>
+                    </button>
+                    <button id="show-pump-form" class="bg-white text-slate-700 p-6 rounded-xl shadow-lg border-2 border-transparent hover:border-teal-500 hover:shadow-xl flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1">
+                        <i class="fas fa-water fa-3x mb-4 text-teal-500"></i>
+                        <span class="text-lg font-bold">ตรวจเช็คปั๊มน้ำ</span>
+                    </button>
+                    <button id="show-repair-form" class="bg-white text-slate-700 p-6 rounded-xl shadow-lg border-2 border-transparent hover:border-orange-500 hover:shadow-xl flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1">
+                        <i class="fas fa-tools fa-3x mb-4 text-orange-500"></i>
+                        <span class="text-lg font-bold">รายงานแจ้งซ่อม</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Page: Form -->
+        <main id="form-page" class="page">
+            <form id="check-form" class="bg-white p-6 md:p-8 rounded-xl shadow-lg space-y-8 border-t-4">
+                <h2 id="form-title" class="text-3xl font-bold text-center text-slate-800 mb-4"></h2>
+                <div id="form-content"></div>
+                <div class="flex flex-col md:flex-row gap-4 pt-6 border-t mt-8">
+                    <button type="button" id="back-to-home" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>กลับหน้าหลัก</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </main>
+        
+        <!-- Modal for Success/Error Messages -->
+        <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div id="modal-content" class="bg-white rounded-lg p-8 shadow-2xl text-center max-w-sm mx-auto">
+                <div id="modal-icon" class="text-6xl mb-4"></div>
+                <h3 id="modal-title" class="text-2xl font-bold mb-2"></h3>
+                <p id="modal-message" class="text-slate-600 mb-8"></p>
+                <button id="close-modal" class="btn">ตกลง</button>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            <div id="loader" class="loader"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNjFlYeeu5BP8Fk5zpf7unO1d6QTMKkv3zcUk3fzAQONauCzeqFcS9dUiN3wDMG2b3CQ/exec"; 
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1AA6V2MYOOhWwMUFJlBzsVgmLJZfH5I5JcalCKRTgjWA/edit?gid=1205410649#gid=1205410649";
+
+        document.getElementById('view-sheet-btn').href = SHEET_URL;
+
+        // --- CHECKLIST DATA ---
+        const checklists = {
+            generator: {
+                title: "แบบบันทึกการตรวจเช็คเครื่องกำเนิดไฟฟ้า",
+                role: "ช่างเวรไฟฟ้า",
+                items: [
+                    { group: "ระบบลิฟท์", items: [
+                        { name: "ระบบลิฟท์ อ.2", type: "status" }, { name: "ระบบลิฟท์ อ.3", type: "status" },
+                        { name: "ระบบลิฟท์ อ.4", type: "status" }, { name: "ระบบลิฟท์ อ.9", type: "status" },
+                        { name: "ระบบลิฟท์ อ.11", type: "status" }, { name: "ระบบลิฟท์ อ.12", type: "status" },
+                        { name: "ระบบลิฟท์ อ.14", type: "status" }, { name: "ระบบลิฟท์ อ.16", type: "status" },
+                        { name: "ระบบลิฟท์ อ.17", type: "status" }, { name: "ระบบลิฟท์ อ.22", type: "status" },
+                    ]},
+                    { group: "ระบบไฟฟ้า", items: [
+                        { name: "ไฟถนน", type: "status" }, { name: "ไฟทางเดิน Cover Way", type: "status" }
+                    ]},
+                    { group: "เครื่องกำเนิดไฟฟ้า", items: [
+                        { name: "1. เครื่องกำเนิดไฟฟ้า 1,250 KVA MTU", location: "อาคาร 22", type: "simplified_generator_check" },
+                        { name: "2. เครื่องกำเนิดไฟฟ้า 625 KVA คัมมิ่น", location: "อาคาร 21", type: "simplified_generator_check" },
+                        { name: "3. เครื่องกำเนิดไฟฟ้า 500 KVA เปอร์กิ้น", location: "อาคาร 16", type: "simplified_generator_check" },
+                        { name: "4. เครื่องกำเนิดไฟฟ้า 625 KVA MAN", location: "หอพักอาคาร 6", type: "simplified_generator_check" },
+                        { name: "5. เครื่องกำเนิดไฟฟ้า 1,000 KVA MTU", location: "อาคาร 2", type: "simplified_generator_check" },
+                        { name: "6. เครื่องกำเนิดไฟฟ้า 625 KVA เปอร์กิ้น", location: "อาคาร 9", type: "simplified_generator_check" },
+                        { name: "7. เครื่องกำเนิดไฟฟ้า 13.5 KW KIPOR", location: "เคลื่อนที่", type: "simplified_generator_check" },
+                        { name: "8. เครื่องกำเนิดไฟฟ้า 1,000 KVA Baudouin", location: "อาคาร 22", type: "simplified_generator_check" },
+                    ]}
+                ]
+            },
+            pump: {
+                title: "แบบบันทึกการตรวจเช็คระบบประปาและปั๊มน้ำ",
+                role: "ช่างเวรประปา",
+                items: [
+                    { group: "1. แรงดันน้ำ", items: [
+                        { name: "1.1 ระบบเมนประปา", type: "simplified_status_check" },
+                        { name: "1.2 ระบบจ่ายน้ำในตึก อ.2", type: "simplified_status_check" },
+                        { name: "1.3 ระบบจ่ายน้ำในตึก อ.4", type: "simplified_status_check" },
+                        { name: "1.4 ระบบจ่ายน้ำในตึก อ.6", type: "simplified_status_check" },
+                        { name: "1.5 ระบบจ่ายน้ำในตึก อ.9", type: "simplified_status_check" },
+                        { name: "1.6 ระบบจ่ายน้ำในตึก อ.12", type: "simplified_status_check" },
+                        { name: "1.7 ระบบจ่ายน้ำในตึก อ.10, 14", type: "simplified_status_check" },
+                        { name: "1.8 ระบบจ่ายน้ำในตึก อ.16", type: "simplified_status_check" },
+                        { name: "1.9 ระบบจ่ายน้ำในตึก อ.17 (LAB)", type: "simplified_status_check" },
+                        { name: "1.10 ระบบจ่ายน้ำในตึก อ.23 (OPD)", type: "simplified_status_check" },
+                        { name: "1.11 ระบบจ่ายน้ำในตึก อ.24 (ศูนย์แพทย์)", type: "simplified_status_check" },
+                    ]},
+                    { group: "เครื่องสูบน้ำดับเพลิง (Fire Pump)", items: [
+                        { name: "Fire Pump (อาคาร 2)", type: "simplified_status_check" },
+                        { name: "Fire Pump (อาคาร 21)", type: "simplified_status_check" },
+                        { name: "Fire Pump (อาคาร 22)", type: "simplified_status_check" },
+                        { name: "Fire Pump (หอพัก)", type: "simplified_status_check" },
+                    ]}
+                ]
+            },
+            repair: {
+                title: "รายงานการแจ้งซ่อม",
+                role: "ช่างซ่อมบำรุง",
+            }
+        };
+
+        let currentFormType = null;
+
+        const pages = document.querySelectorAll('.page');
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const checkFormEl = document.getElementById('check-form');
+        const loaderEl = document.getElementById('loader');
+        const formContentEl = document.getElementById('form-content');
+
+        function navigateTo(pageId) {
+            pages.forEach(page => page.classList.toggle('active', page.id === pageId));
+            navBtns.forEach(btn => {
+                const isAnchor = btn.tagName === 'A';
+                if (!isAnchor) {
+                    const isActive = btn.dataset.page === pageId;
+                    btn.classList.toggle('bg-slate-100', isActive);
+                    btn.classList.toggle('text-slate-700', isActive);
+                    btn.classList.toggle('text-slate-600', !isActive);
+                    btn.classList.toggle('hover:bg-slate-100', !isActive);
+                }
+            });
+        }
+
+        navBtns.forEach(btn => {
+            if (btn.tagName !== 'A') {
+                btn.addEventListener('click', () => navigateTo(btn.dataset.page));
+            }
+        });
+
+        document.getElementById('show-generator-form').addEventListener('click', () => showForm('generator'));
+        document.getElementById('show-pump-form').addEventListener('click', () => showForm('pump'));
+        document.getElementById('show-repair-form').addEventListener('click', () => showForm('repair'));
+        document.getElementById('back-to-home').addEventListener('click', () => navigateTo('home'));
+
+        function showForm(type) {
+            currentFormType = type;
+            const config = checklists[type];
+            document.getElementById('form-title').textContent = config.title;
+            
+            // Apply theme
+            checkFormEl.classList.remove('theme-blue', 'theme-teal', 'theme-orange');
+            loaderEl.classList.remove('border-t-blue-600', 'border-t-teal-600', 'border-t-orange-600');
+            if (type === 'generator') {
+                checkFormEl.classList.add('theme-blue');
+                loaderEl.classList.add('border-t-blue-600');
+            } else if (type === 'pump') {
+                checkFormEl.classList.add('theme-teal');
+                loaderEl.classList.add('border-t-teal-600');
+            } else if (type === 'repair') {
+                checkFormEl.classList.add('theme-orange');
+                loaderEl.classList.add('border-t-orange-600');
+            }
+
+            let formHtml = `
+                <div class="bg-slate-50 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">ข้อมูลผู้ปฏิบัติงาน</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="technicianName" class="block text-slate-600 font-medium mb-2">ชื่อ-นามสกุล</label>
+                            <input type="text" id="technicianName" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="technicianPhone" class="block text-slate-600 font-medium mb-2">เบอร์โทร</label>
+                            <input type="text" id="technicianPhone" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="technicianRole" class="block text-slate-600 font-medium mb-2">ตำแหน่ง</label>
+                            <input type="text" id="technicianRole" class="form-input bg-slate-200" value="${config.role}" readonly>
+                        </div>
+                        <div>
+                            <label for="shift" class="block text-slate-600 font-medium mb-2">ช่วงเวร</label>
+                            <select id="shift" class="form-select" required>
+                                <option value="เช้า (08:00-16:00)">เช้า (08:00-16:00)</option>
+                                <option value="บ่าย (16:00-24:00)">บ่าย (16:00-24:00)</option>
+                                <option value="ดึก (24:00-08:00)">ดึก (24:00-08:00)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">รายละเอียด</h3>
+                    <div id="checklist-items" class="space-y-6"></div>
+                </div>
+            `;
+            formContentEl.innerHTML = formHtml;
+
+            const checklistContainer = document.getElementById('checklist-items');
+            if (type === 'repair') {
+                checklistContainer.innerHTML = `
+                    <div class="p-5 bg-slate-50 rounded-lg border space-y-4">
+                        <div>
+                            <label for="repair-department" class="block text-slate-600 font-medium mb-2">แจ้งซ่อมจากแผนก</label>
+                            <input type="text" id="repair-department" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="repair-problem" class="block text-slate-600 font-medium mb-2">อาการเสีย / ปัญหาที่พบ</label>
+                            <textarea id="repair-problem" class="form-textarea" rows="3" required></textarea>
+                        </div>
+                        <div>
+                            <label for="repair-solution" class="block text-slate-600 font-medium mb-2">วิธีการแก้ไข</label>
+                            <textarea id="repair-solution" class="form-textarea" rows="3"></textarea>
+                        </div>
+                        <div>
+                            <label for="repair-status" class="block text-slate-600 font-medium mb-2">ผลการแก้ไข</label>
+                            <select id="repair-status" class="form-select">
+                                <option>แก้ไขเรียบร้อย</option>
+                                <option>รออะไหล่</option>
+                                <option>ส่งซ่อมภายนอก</option>
+                                <option>ไม่สามารถแก้ไขได้</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            } else {
+                config.items.forEach(group => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'p-5 bg-slate-50 rounded-lg border';
+                    const groupTitle = document.createElement('h3');
+                    groupTitle.className = 'text-lg font-semibold mb-4 text-slate-700';
+                    groupTitle.textContent = group.group;
+                    groupDiv.appendChild(groupTitle);
+                    const itemsWrapper = document.createElement('div');
+                    itemsWrapper.className = 'space-y-5';
+                    group.items.forEach((item, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'p-4 bg-white rounded-lg shadow-sm border item-card';
+                        itemDiv.dataset.itemName = item.name;
+                        let locationText = item.location ? `<span class="text-xs text-slate-500 ml-2">(${item.location})</span>` : '';
+                        let itemContent = '';
+                        const uniqueName = `${group.group.replace(/\s/g, '-')}-${index}`;
+                        switch (item.type) {
+                            case 'status':
+                                itemContent = `<label class="font-medium text-slate-800">${item.name}</label><div class="flex items-center space-x-3 mt-2 custom-radio"><input type="radio" id="${uniqueName}-ok" name="${uniqueName}" value="ปกติ" checked><label for="${uniqueName}-ok"><i class="fas fa-check mr-2"></i>ปกติ</label><input type="radio" id="${uniqueName}-err" name="${uniqueName}" value="ผิดปกติ"><label for="${uniqueName}-err"><i class="fas fa-times mr-2"></i>ผิดปกติ</label></div>`;
+                                break;
+                            case 'simplified_generator_check':
+                                itemContent = `<label class="font-medium text-slate-800">${item.name}${locationText}</label><div class="space-y-4 mt-3"><div><p class="text-sm font-medium text-slate-600 mb-2">สถานะโดยรวม</p><select class="form-select item-status"><option value="ปกติ">ปกติ</option><option value="ผิดปกติ">ผิดปกติ</option></select></div><div><p class="text-sm font-medium text-slate-600 mb-2">ระดับน้ำมัน (ลิตร)</p><input type="number" class="form-input item-fuel-level" placeholder="กรอกจำนวนลิตร" required></div></div>`;
+                                break;
+                            case 'simplified_status_check':
+                                itemContent = `<label class="font-medium text-slate-800">${item.name}${locationText}</label><div class="mt-3"><p class="text-sm font-medium text-slate-600 mb-2">สถานะ</p><select class="form-select item-status"><option value="ปกติ">ปกติ</option><option value="ผิดปกติ">ผิดปกติ</option></select></div>`;
+                                break;
+                        }
+                        itemDiv.innerHTML = `${itemContent}<div class="mt-4"><textarea class="form-textarea text-sm" rows="1" placeholder="หมายเหตุ (ถ้ามี)"></textarea></div>`;
+                        itemsWrapper.appendChild(itemDiv);
+                    });
+                    groupDiv.appendChild(itemsWrapper);
+                    checklistContainer.appendChild(groupDiv);
+                });
+            }
+            navigateTo('form-page');
+        }
+        
+        checkFormEl.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE" || !SCRIPT_URL) {
+                showModal('error', 'ยังไม่ได้ตั้งค่า', 'กรุณาตั้งค่า SCRIPT_URL ในโค้ดก่อนใช้งาน');
+                return;
+            }
+
+            document.getElementById('loading-overlay').classList.remove('hidden');
+
+            const submissionData = {
+                technicianName: document.getElementById('technicianName').value,
+                technicianPhone: document.getElementById('technicianPhone').value,
+                technicianRole: document.getElementById('technicianRole').value,
+                shift: document.getElementById('shift').value,
+                formType: currentFormType, // 'generator', 'pump', or 'repair'
+            };
+
+            if (currentFormType === 'repair') {
+                submissionData.department = document.getElementById('repair-department').value;
+                submissionData.problem = document.getElementById('repair-problem').value;
+                submissionData.solution = document.getElementById('repair-solution').value;
+                submissionData.status = document.getElementById('repair-status').value;
+            } else {
+                const itemsData = [];
+                const itemElements = document.querySelectorAll('.item-card');
+                itemElements.forEach(el => {
+                    const itemName = el.dataset.itemName;
+                    const notes = el.querySelector('textarea').value.trim();
+                    let status = 'N/A';
+                    let value = null;
+                    const statusSelect = el.querySelector('select.item-status');
+                    const fuelLevelInput = el.querySelector('input.item-fuel-level');
+                    const radioStatus = el.querySelector('input[type="radio"]:checked');
+                    if (fuelLevelInput) { 
+                        status = statusSelect.value;
+                        value = fuelLevelInput.value ? `${fuelLevelInput.value} ลิตร` : null;
+                    } else if (statusSelect) { 
+                        status = statusSelect.value;
+                    } else if (radioStatus) { 
+                        status = radioStatus.value;
+                    }
+                    itemsData.push({ name: itemName, status: status, value: value, notes: notes });
+                });
+                submissionData.items = itemsData;
+            }
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(submissionData)
+            })
+            .then(res => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                showModal('success', 'บันทึกสำเร็จ', 'ข้อมูลของคุณถูกส่งเรียบร้อยแล้ว');
+                checkFormEl.reset();
+                navigateTo('home');
+            })
+            .catch(error => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                console.error('Error:', error);
+                showModal('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบการตั้งค่า SCRIPT_URL และลองอีกครั้ง');
+            });
+        });
+
+        const modal = document.getElementById('message-modal');
+        const modalContent = document.getElementById('modal-content');
+        const closeModalBtn = document.getElementById('close-modal');
+
+        function showModal(type, title, message) {
+            const iconEl = document.getElementById('modal-icon');
+            const titleEl = document.getElementById('modal-title');
+            const closeBtn = document.getElementById('close-modal');
+            if (type === 'success') {
+                iconEl.innerHTML = '<i class="fas fa-check-circle text-teal-500"></i>';
+                titleEl.className = 'text-2xl font-bold mb-2 text-teal-600';
+                closeBtn.className = 'btn bg-teal-600 hover:bg-teal-700';
+            } else {
+                iconEl.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
+                titleEl.className = 'text-2xl font-bold mb-2 text-red-600';
+                closeBtn.className = 'btn bg-red-600 hover:bg-red-700';
+            }
+            titleEl.textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            modal.classList.remove('hidden');
+            modalContent.classList.add('modal-enter');
+        }
+
+        function hideModal() {
+            modalContent.classList.remove('modal-enter');
+            modalContent.classList.add('modal-leave');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modalContent.classList.remove('modal-leave');
+            }, 300);
+        }
+
+        closeModalBtn.addEventListener('click', hideModal);
+
+    </script>
+</body>
+</html>
