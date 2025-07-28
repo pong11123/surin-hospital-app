@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การตรวจเช็คบำรุงรักษาและแจ้งซ่อม (Pro)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- THEME COLOR VARIABLES --- */
+        html[data-theme='dark'] {
+            --bg-main: #1a202c;
+            --bg-card: #2d3748;
+            --primary-accent: #4299e1;
+            --primary-hover: #2b6cb0;
+            --text-main: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --input-bg: var(--bg-main);
+        }
+        html[data-theme='light'] {
+            --bg-main: #f0f2f5;
+            --bg-card: #ffffff;
+            --primary-accent: #3498db;
+            --primary-hover: #2980b9;
+            --text-main: #34495e;
+            --text-muted: #7f8c8d;
+            --border-color: #dfe6e9;
+            --input-bg: #f0f2f5;
+        }
+        html[data-theme='vibrant'] {
+            --bg-main: #191622;
+            --bg-card: #231e31;
+            --primary-accent: #ff79c6;
+            --primary-hover: #ff4da6;
+            --text-main: #f8f8f2;
+            --text-muted: #bd93f9;
+            --border-color: #44475a;
+            --input-bg: var(--bg-main);
+        }
+
+        :root {
+            --success-color: #48bb78;
+            --danger-color: #f56565;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+        }
+
+        /* --- BACKGROUND IMAGE --- */
+        html {
+            background-image: url('http://googleusercontent.com/file_content/3');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* --- GENERAL LAYOUT --- */
+        body {
+            font-family: 'Sarabun', sans-serif;
+            margin: 0;
+            padding: 1.5rem;
+            background-color: transparent; /* Make body transparent to see html background */
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Vertically center the container */
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- BACKGROUND OVERLAY --- */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-main);
+            opacity: 0.25; /* Adjust this value for fade effect, 0.25 is like 25% fade */
+            z-index: -1;
+            transition: background-color 0.3s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        h1 {
+            color: var(--text-main);
+            text-align: center;
+            border-bottom: 2px solid var(--primary-accent);
+            padding-bottom: 1rem;
+            margin-top: 0;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* --- THEME SWITCHER --- */
+        .theme-switcher {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            background-color: var(--bg-card);
+            padding: 0.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            z-index: 100;
+        }
+        .theme-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .theme-dot:hover {
+            transform: scale(1.1);
+        }
+        .theme-dot.active {
+            border-color: var(--text-main);
+        }
+        .theme-dot[data-theme="dark"] { background-color: #2d3748; }
+        .theme-dot[data-theme="light"] { background-color: #3498db; }
+        .theme-dot[data-theme="vibrant"] { background-color: #ff79c6; }
+
+        /* --- FORM ELEMENTS --- */
+        .form-group { margin-bottom: 1.5rem; }
+        label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+        label svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--primary-accent);
+            transition: stroke 0.3s ease;
+        }
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-accent) 50%, transparent);
+        }
+        .fuel-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .fuel-percentage-span {
+            font-size: 1.2em;
+            font-weight: 700;
+            padding: 0.7rem;
+            border-radius: 8px;
+            min-width: 80px;
+            text-align: center;
+            color: #fff;
+            background-color: var(--text-muted);
+            transition: background-color 0.3s;
+        }
+        .checklist-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+        .checklist-table th, .checklist-table td {
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .checklist-table th {
+            background-color: var(--input-bg);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .checklist-table tbody tr { transition: background-color 0.2s; }
+        .checklist-table tbody tr:hover { background-color: color-mix(in srgb, var(--bg-card) 80%, #fff 20%); }
+        .notes-input {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+        .radio-group { display: flex; gap: 1.5rem; }
+        .radio-group label {
+            color: var(--text-main);
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group label span {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            position: relative;
+            transition: border-color 0.3s;
+        }
+        .radio-group label:hover span { border-color: var(--primary-accent); }
+        .radio-group input[type="radio"]:checked + span { border-color: var(--primary-accent); }
+        .radio-group input[type="radio"]:checked + span::after {
+            content: '';
+            display: block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-accent);
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .fail {
+            background-color: color-mix(in srgb, var(--danger-color) 15%, transparent) !important;
+            border-left: 5px solid var(--danger-color);
+        }
+        #submit-btn {
+            background: linear-gradient(145deg, var(--primary-accent), var(--primary-hover));
+            color: #fff;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px color-mix(in srgb, var(--primary-accent) 30%, transparent);
+        }
+        #submit-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .hidden { display: none; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .icon-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .menu-item {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+        }
+        .menu-item svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--text-muted);
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+            stroke-width: 1.5;
+        }
+        .menu-item span {
+            font-weight: 600;
+            display: block;
+        }
+        .menu-item:hover {
+            background-color: color-mix(in srgb, var(--bg-card) 80%, #fff 20%);
+            border-color: var(--primary-accent);
+            color: var(--text-main);
+            transform: translateY(-5px);
+        }
+        .menu-item:hover svg {
+            stroke: var(--primary-accent);
+        }
+        .menu-item.active {
+            background-color: var(--primary-accent);
+            border-color: var(--primary-accent);
+            color: #fff;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px color-mix(in srgb, var(--primary-accent) 30%, transparent);
+        }
+        .menu-item.active svg {
+            stroke: #fff;
+        }
+
+        /* --- NOTIFICATION / MODAL --- */
+        #notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #notification-box {
+            background-color: var(--bg-card);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+        }
+        #notification-box p {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        /* --- DASHBOARD STYLES --- */
+        #dashboard-section h2 {
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        .dashboard-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .dashboard-controls .form-group {
+            flex: 1 1 200px;
+            margin-bottom: 0;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            background-color: var(--input-bg);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        .filter-btn {
+            font-family: 'Sarabun', sans-serif;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            background-color: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .filter-btn.active {
+            background-color: var(--primary-accent);
+            color: #fff;
+            box-shadow: 0 2px 5px color-mix(in srgb, var(--primary-accent) 20%, transparent);
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .summary-card {
+            background-color: var(--input-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .summary-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+        .summary-card .count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .summary-card .issues {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+        .detail-table {
+            width: 100%;
+            margin-top: 1rem;
+            border-collapse: collapse;
+        }
+        .detail-table th, .detail-table td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* --- GEMINI BUTTON STYLES --- */
+        .gemini-btn {
+            background: linear-gradient(145deg, #8A2BE2, #4B0082);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: 'Sarabun', sans-serif;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .gemini-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(138, 43, 226, 0.4);
+        }
+        .gemini-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .gemini-btn .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="theme-switcher">
+        <div class="theme-dot active" data-theme="dark" title="Dark Theme"></div>
+        <div class="theme-dot" data-theme="light" title="Light Theme"></div>
+        <div class="theme-dot" data-theme="vibrant" title="Vibrant Theme"></div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notification-overlay">
+        <div id="notification-box">
+            <p id="notification-message">กำลังบันทึกข้อมูล...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>การตรวจเช็คบำรุงรักษาแจ้งซ่อม</h1>
+        <form id="main-form">
+            <!-- Icon Menu Selection -->
+            <div class="icon-menu">
+                 <div class="menu-item" data-type="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" /></svg>
+                    <span>Dashboard</span>
+                </div>
+                <div class="menu-item" data-type="repair-log">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.17 48.17 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+                    <span>ระบบแจ้งซ่อม</span>
+                </div>
+                <div class="menu-item" data-type="generator">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                    <span>เครื่องกำเนิดไฟฟ้า</span>
+                </div>
+                <div class="menu-item" data-type="pump">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m-3-1-3-1.091m0 0-3 1.091m0 0-3-1.091m0 0-4.5 1.636M12.75 12.75l-3-1.091" /></svg>
+                    <span>ระบบปั้มน้ำ</span>
+                </div>
+                <div class="menu-item" data-type="fire-pump">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                    <span>ระบบดับเพลิง</span>
+                </div>
+            </div>
+            
+            <input type="hidden" id="inspection-type-select">
+
+            <!-- Common Fields -->
+            <div id="common-fields" class="hidden">
+                 <div class="form-group">
+                    <label for="inspection-date">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0h18M-4.5 12h22.5" /></svg>
+                        วันที่บันทึก
+                    </label>
+                    <input type="date" id="inspection-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="inspector-name">
+                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                        ชื่อผู้บันทึก (ช่างเวร)
+                    </label>
+                    <input type="text" id="inspector-name" placeholder="กรอกชื่อ-นามสกุล" required>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="hidden">
+                <div class="dashboard-controls">
+                    <div class="form-group">
+                        <label for="dashboard-start-date">วันที่เริ่มต้น</label>
+                        <input type="date" id="dashboard-start-date">
+                    </div>
+                     <div class="form-group">
+                        <label for="dashboard-end-date">วันที่สิ้นสุด</label>
+                        <input type="date" id="dashboard-end-date">
+                    </div>
+                    <div id="filter-buttons" class="filter-buttons">
+                        <button type="button" class="filter-btn" data-filter="all">ทั้งหมด</button>
+                        <button type="button" class="filter-btn active" data-filter="issues">มีปัญหา</button>
+                        <button type="button" class="filter-btn" data-filter="normal">ปกติ</button>
+                    </div>
+                </div>
+                <h2>สรุปผล <span id="dashboard-date-range"></span></h2>
+                <div class="summary-cards" id="dashboard-summary-cards">
+                    <!-- Cards will be injected here -->
+                </div>
+                <div id="dashboard-details">
+                    <!-- Details will be injected here -->
+                </div>
+            </div>
+
+            <!-- Repair Log Section -->
+            <div id="repair-log-section" class="hidden">
+                <div class="form-group">
+                    <label for="technician-type-select">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                        ประเภทช่างเวร
+                    </label>
+                    <select id="technician-type-select">
+                        <option value="">-- เลือกประเภท --</option>
+                        <option value="ไฟฟ้า">ช่างเวรไฟฟ้า</option>
+                        <option value="ทั่วไป">ช่างเวรทั่วไป</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="department-request">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18h16.5M2.25 12h17.25m-12.75 9V3M18.75 21V3" /></svg>
+                        แผนกที่ส่งซ่อม
+                    </label>
+                    <input type="text" id="department-request" placeholder="ระบุชื่อแผนก/หน่วยงาน">
+                </div>
+                 <div class="form-group">
+                    <label for="repair-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                        รายการที่ส่งซ่อม
+                    </label>
+                    <textarea id="repair-item" placeholder="อธิบายอาการเสีย/สิ่งที่ต้องการให้ซ่อม"></textarea>
+                </div>
+                <div class="form-group" style="text-align: right; margin-bottom: 1.5rem;">
+                    <button type="button" id="gemini-suggestion-btn" class="gemini-btn">
+                        <div class="spinner"></div>
+                        <span class="btn-text">✨ ขอแนวทางการแก้ไข</span>
+                    </button>
+                </div>
+                 <div class="form-group">
+                    <label for="repair-solution">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 3.75H6A2.25 2.25 0 0 0 3.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0 1 20.25 6v1.5m0 9V18A2.25 2.25 0 0 1 18 20.25h-1.5m-9 0H6A2.25 2.25 0 0 1 3.75 18v-1.5M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                        การแก้ไข
+                    </label>
+                    <textarea id="repair-solution" placeholder="อธิบายการดำเนินการแก้ไข"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="repair-time">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                        เวลาที่ใช้ (นาที)
+                    </label>
+                    <input type="number" id="repair-time" placeholder="ระบุเป็นตัวเลขนาที">
+                </div>
+                 <div class="form-group">
+                    <label for="repair-status-select">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                        สถานะการซ่อม
+                    </label>
+                    <select id="repair-status-select">
+                        <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        <option value="รออะไหล่">รออะไหล่</option>
+                        <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
+                        <option value="ส่งต่อ">ส่งต่อ/ต้องใช้ผู้ชำนาญ</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Generator Section -->
+            <div id="generator-section" class="hidden">
+                 <div class="form-group">
+                    <label for="generator-select">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                        เลือกเครื่องกำเนิดไฟฟ้า
+                    </label>
+                    <select id="generator-select">
+                        <option value="">-- กรุณาเลือกเครื่อง --</option>
+                        <option value="1250_kva_mtu">1,250 Kva, อาคาร22, MTU</option>
+                        <option value="1000_kva_mtu">1,000 Kva, อาคาร2, MTU</option>
+                        <option value="625_kva_man">625 Kva, อาคาร6, MAN</option>
+                        <option value="1000_kva_baudouin">1,000 Kva, อาคาร6, Baudouin</option>
+                        <option value="625_kva_perkins">625 Kva, อาคาร9, Perkins</option>
+                        <option value="500_kva_fgwilson">500 Kva, อาคาร16, FG WILSON</option>
+                        <option value="625_kva_cummins">625 Kva, อาคาร21, Cummins</option>
+                        <option value="13.5_kw_kipor">13.5 KW, Kipor โบมา</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fuel-liters">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z" /></svg>
+                        ระดับน้ำมันเชื้อเพลิง (ลิตร)
+                    </label>
+                    <div class="fuel-group">
+                        <input type="number" id="fuel-liters" placeholder="กรอกปริมาณน้ำมันเป็นลิตร">
+                        <span id="gen-fuel-percentage" class="fuel-percentage-span">-- %</span>
+                    </div>
+                </div>
+                <table class="checklist-table" id="generator-checklist"></table>
+            </div>
+
+            <!-- Pump Section -->
+            <div id="pump-section" class="hidden">
+                 <div class="form-group">
+                    <label for="pump-select">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m-3-1-3-1.091m0 0-3 1.091m0 0-3-1.091m0 0-4.5 1.636M12.75 12.75l-3-1.091" /></svg>
+                        เลือกระบบปั้มน้ำ
+                    </label>
+                    <select id="pump-select">
+                        <option value="">-- กรุณาเลือกตึก --</option>
+                        <option value="pump_hosung">ระบบปั้มน้ำ หอสูง</option>
+                        <option value="pump_a2">ระบบปั้มน้ำ อ. 2</option>
+                        <option value="pump_a4">ระบบปั้มน้ำ อ. 4</option>
+                        <option value="pump_a6">ระบบปั้มน้ำ อ. 6</option>
+                        <option value="pump_a9">ระบบปั้มน้ำ อ. 9</option>
+                        <option value="pump_a12">ระบบปั้มน้ำ อ. 12</option>
+                        <option value="pump_a14">ระบบปั้มน้ำ อ. 14</option>
+                        <option value="pump_a16">ระบบปั้มน้ำ อ. 16</option>
+                        <option value="pump_a17">ระบบปั้มน้ำ อ. 17 (LAB)</option>
+                        <option value="pump_a21">ระบบปั้มน้ำ อ. 21 (ศูนย์แพทย์)</option>
+                        <option value="pump_a23">ระบบปั้มน้ำ อ. 23 (OPD)</option>
+                    </select>
+                </div>
+                 <table class="checklist-table" id="pump-checklist"></table>
+            </div>
+            
+            <!-- Fire Pump Section -->
+            <div id="fire-pump-section" class="hidden">
+                 <div class="form-group">
+                    <label for="fire-pump-select">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                        เลือกเครื่องสูบน้ำดับเพลิง
+                    </label>
+                    <select id="fire-pump-select">
+                        <option value="">-- กรุณาเลือกเครื่อง --</option>
+                        <option value="fire_pump_1">เครื่องสูบน้ำดับเพลิง 1</option>
+                        <option value="fire_pump_2">เครื่องสูบน้ำดับเพลิง 2</option>
+                        <option value="fire_pump_3">เครื่องสูบน้ำดับเพลิง 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fire-pump-fuel-liters">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z" /></svg>
+                        ระดับน้ำมันเชื้อเพลิง (ลิตร)
+                    </label>
+                    <div class="fuel-group">
+                        <input type="number" id="fire-pump-fuel-liters" placeholder="กรอกปริมาณน้ำมันเป็นลิตร">
+                        <span id="fire-pump-fuel-percentage" class="fuel-percentage-span">-- %</span>
+                    </div>
+                </div>
+                 <table class="checklist-table" id="fire-pump-checklist"></table>
+            </div>
+
+            <!-- Common Submit Area -->
+            <div id="submit-area" class="hidden">
+                <div class="form-group" style="margin-top: 2rem;">
+                    <label for="photo-upload">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                        แนบรูปถ่าย (ถ้ามี)
+                    </label>
+                    <input type="file" id="photo-upload" accept="image/*">
+                </div>
+                <button type="submit" id="submit-btn">บันทึกผล</button>
+            </div>
+        </form>
+
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // --- ELEMENTS ---
+            const mainForm = document.getElementById('main-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const notificationOverlay = document.getElementById('notification-overlay');
+            const notificationMessage = document.getElementById('notification-message');
+            const iconMenu = document.querySelector('.icon-menu');
+            const menuItems = document.querySelectorAll('.menu-item');
+            const inspectionTypeSelect = document.getElementById('inspection-type-select');
+            const commonFields = document.getElementById('common-fields');
+            const dashboardSection = document.getElementById('dashboard-section');
+            const repairLogSection = document.getElementById('repair-log-section');
+            const generatorSection = document.getElementById('generator-section');
+            const pumpSection = document.getElementById('pump-section');
+            const firePumpSection = document.getElementById('fire-pump-section');
+            const submitArea = document.getElementById('submit-area');
+            const themeSwitcher = document.querySelector('.theme-switcher');
+            const themeDots = document.querySelectorAll('.theme-dot');
+            const dashboardStartDate = document.getElementById('dashboard-start-date');
+            const dashboardEndDate = document.getElementById('dashboard-end-date');
+            const filterButtons = document.getElementById('filter-buttons');
+            const geminiSuggestionBtn = document.getElementById('gemini-suggestion-btn');
+            const repairItemTextarea = document.getElementById('repair-item');
+            const repairSolutionTextarea = document.getElementById('repair-solution');
+
+            // --- FIREBASE INITIALIZATION ---
+            // Your web app's Firebase configuration
+            const firebaseConfig = {
+              apiKey: "AIzaSyAfL-VnobDVDJ1SpX_XQ31WFVPJdTeab0s",
+              authDomain: "maintenance-2f855.firebaseapp.com",
+              projectId: "maintenance-2f855",
+              storageBucket: "maintenance-2f855.appspot.com",
+              messagingSenderId: "752202590251",
+              appId: "1:752202590251:web:2836aac94da9940309226e",
+              measurementId: "G-D9DMFGP3R9"
+            };
+            
+            const appId = "maintenance-2f855"; // Hardcode appId for Firestore path
+
+            let app, auth, db, storage, analytics;
+            try {
+                app = initializeApp(firebaseConfig);
+                analytics = getAnalytics(app);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                storage = getStorage(app);
+                // When using a specific user's config, always sign in anonymously.
+                await signInAnonymously(auth);
+                console.log("Firebase initialized and user signed in anonymously.");
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                showNotification(`Firebase Error: ${error.message}`, true);
+            }
+
+            // --- DATA ---
+            const genTankCapacities = {
+                "1250_kva_mtu": 2200, "1000_kva_mtu": 1400, "625_kva_man": 1500,
+                "1000_kva_baudouin": 2000, "625_kva_perkins": 1000, "500_kva_fgwilson": 1000,
+                "625_kva_cummins": 800, "13.5_kw_kipor": 30
+            };
+            const firePumpTankCapacities = {
+                "fire_pump_1": 200, "fire_pump_2": 340, "fire_pump_3": 400
+            };
+            const generatorChecklistItems = [
+                "1.1 ไม่พบคราบน้ำมัน/น้ำหล่อเย็นรั่วซึม", "1.2 ไม่มีเสียงหรือกลิ่นผิดปกติ",
+                "3.1 ระดับน้ำมันเครื่องอยู่ในเกณฑ์", "4.1 ระดับน้ำหล่อเย็นอยู่ในเกณฑ์",
+                "5.1 ขั้วแบตเตอรี่สะอาดและแน่นหนา", "5.2 แรงดันไฟฟ้าแบตเตอรี่ (V)",
+                "6.1 สถานะหน้าจอพร้อมใช้งาน (Auto/Ready)", "6.2 ไม่มีสัญญาณเตือน (Alarm)",
+                "8.1 พื้นที่โดยรอบสะอาด", "8.2 อุปกรณ์ดับเพลิงพร้อมใช้งาน"
+            ];
+            const pumpChecklistItems = [
+                "1.1 ไม่พบการรั่วซึมที่ตัวปั๊มหรือท่อ", "1.2 ไม่มีเสียงดังหรือการสั่นสะเทือนผิดปกติ",
+                "2.1 มอเตอร์ไม่ร้อนจัด", "2.2 ตู้ควบคุมทำงานปกติ (Auto/Manual)",
+                "3.1 แรงดันน้ำ (Pressure) อยู่ในเกณฑ์", "3.2 Pressure Switch ทำงานปกติ",
+                "4.1 วาล์วน้ำอยู่ในตำแหน่งที่ถูกต้อง", "4.2 ทดสอบการทำงาน Start/Stop ปกติ"
+            ];
+            const firePumpChecklistItems = [
+                "1.1 ทดสอบระบบ Start Manual", "1.2 ระดับน้ำมันเครื่อง/น้ำหล่อเย็นปกติ",
+                "2.1 สภาพแบตเตอรี่และขั้วต่อปกติ", "2.2 แรงดันแบตเตอรี่ (V) อยู่ในเกณฑ์",
+                "3.1 ตู้ควบคุมอยู่ในโหมด Auto", "3.2 ไม่พบสัญญาณเตือนที่ตู้ควบคุม",
+                "4.1 แรงดัน Jockey Pump ปกติ", "4.2 แรงดัน Main Pump (ขณะทดสอบ) ปกติ"
+            ];
+
+            // --- FUNCTIONS ---
+            function showNotification(message, isError = false, duration = 2000) {
+                notificationMessage.textContent = message;
+                notificationOverlay.style.display = 'flex';
+                if (isError || duration > 0) {
+                    setTimeout(() => {
+                        notificationOverlay.style.display = 'none';
+                    }, duration);
+                }
+            }
+
+            function createChecklist(items, containerId) {
+                const container = document.getElementById(containerId);
+                if (container.hasChildNodes()) return;
+                const header = document.createElement('thead');
+                header.innerHTML = `
+                    <tr>
+                        <th>รายการตรวจสอบ</th>
+                        <th style="width: 200px;">ผลการตรวจ</th>
+                        <th>หมายเหตุ/ค่าที่วัด</th>
+                    </tr>`;
+                const body = document.createElement('tbody');
+                items.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    const id = `${containerId}-item-${index}`;
+                    row.innerHTML = `
+                        <td>${item}</td>
+                        <td>
+                            <div class="radio-group">
+                                <label><input type="radio" name="${id}" value="ผ่าน" required><span></span> ผ่าน</label>
+                                <label><input type="radio" name="${id}" value="ไม่ผ่าน"><span></span> ไม่ผ่าน</label>
+                            </div>
+                        </td>
+                        <td><input type="text" class="notes-input" placeholder="ค่าที่วัด/รายละเอียด..."></td>
+                    `;
+                    body.appendChild(row);
+                });
+                container.appendChild(header);
+                container.appendChild(body);
+            }
+
+            function updateFuelPercentage(selectId, inputId, spanId, capacityData) {
+                const selectEl = document.getElementById(selectId);
+                const inputEl = document.getElementById(inputId);
+                const spanEl = document.getElementById(spanId);
+                const selectedKey = selectEl.value;
+                const liters = parseFloat(inputEl.value);
+
+                if (!selectedKey || isNaN(liters) || liters < 0) {
+                    spanEl.textContent = '-- %';
+                    spanEl.style.backgroundColor = 'var(--text-muted)';
+                    return;
+                }
+                const capacity = capacityData[selectedKey];
+                const percentage = Math.round((liters / capacity) * 100);
+                spanEl.textContent = `${percentage}%`;
+                spanEl.style.backgroundColor = percentage < 75 ? 'var(--danger-color)' : 'var(--success-color)';
+            }
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                themeDots.forEach(dot => {
+                    dot.classList.toggle('active', dot.dataset.theme === theme);
+                });
+            }
+
+            async function loadDashboardData() {
+                if (!db) {
+                    showNotification('ไม่สามารถเชื่อมต่อฐานข้อมูลได้', true);
+                    return;
+                }
+                showNotification('กำลังโหลดข้อมูล...', false, 0);
+
+                const startDate = dashboardStartDate.value;
+                const endDate = dashboardEndDate.value;
+                const activeFilter = filterButtons.querySelector('.filter-btn.active').dataset.filter;
+                document.getElementById('dashboard-date-range').textContent = `จาก ${startDate} ถึง ${endDate}`;
+                
+                const collectionsToFetch = [
+                    { name: 'repair_logs', title: 'แจ้งซ่อม' },
+                    { name: 'generator_inspections', title: 'เครื่องกำเนิดไฟฟ้า' },
+                    { name: 'pump_inspections', title: 'ปั้มน้ำ' },
+                    { name: 'fire_pump_inspections', title: 'ดับเพลิง' }
+                ];
+
+                const cardContainer = document.getElementById('dashboard-summary-cards');
+                const detailsContainer = document.getElementById('dashboard-details');
+                cardContainer.innerHTML = '';
+                detailsContainer.innerHTML = '';
+                
+                // OPTIMIZATION: Fetch all data in parallel
+                const promises = collectionsToFetch.map(collectionInfo => {
+                    const docPath = `/artifacts/${appId}/public/data/${collectionInfo.name}`;
+                    const constraints = [where("date", ">=", startDate), where("date", "<=", endDate)];
+                    
+                    const q = query(collection(db, docPath), ...constraints);
+                    return getDocs(q);
+                });
+
+                const snapshots = await Promise.all(promises);
+                let allDataInRange = [];
+                snapshots.forEach((querySnapshot, index) => {
+                    const collectionInfo = collectionsToFetch[index];
+                    querySnapshot.forEach(doc => {
+                        allDataInRange.push({ ...doc.data(), collectionTitle: collectionInfo.title });
+                    });
+                });
+
+                // Client-side filtering
+                const filteredData = allDataInRange.filter(data => {
+                    const isIssue = (data.logType === 'repair-log' && data.status !== 'เสร็จสิ้น') || 
+                                    (data.logType !== 'repair-log' && data.overallStatus === 'พบข้อบกพร่อง');
+                    if (activeFilter === 'all') return true;
+                    if (activeFilter === 'issues') return isIssue;
+                    if (activeFilter === 'normal') return !isIssue;
+                    return false;
+                });
+
+                // Render based on filtered data
+                detailsContainer.innerHTML = '';
+                for (const collectionInfo of collectionsToFetch) {
+                    const dataForCollectionDetails = filteredData.filter(d => d.collectionTitle === collectionInfo.title);
+                    const allDataForCollectionSummary = allDataInRange.filter(d => d.collectionTitle === collectionInfo.title);
+                    
+                    let issuesHtml = '';
+
+                    dataForCollectionDetails.forEach(data => {
+                        if (data.logType === 'repair-log') {
+                            issuesHtml += `<tr><td>${data.date}</td><td>${data.department || ''}</td><td>${data.problem || ''}</td><td>${data.status}</td></tr>`;
+                        } else {
+                            issuesHtml += `<tr><td>${data.date}</td><td>${data.unitName || ''}</td><td>${data.overallStatus}</td><td>${data.recordedBy}</td></tr>`;
+                        }
+                    });
+
+                    // Render summary card using the unfiltered data for this collection
+                    const totalCount = allDataForCollectionSummary.length;
+                    const totalIssues = allDataForCollectionSummary.filter(d => (d.logType === 'repair-log' && d.status !== 'เสร็จสิ้น') || (d.logType !== 'repair-log' && d.overallStatus === 'พบข้อบกพร่อง')).length;
+
+                    const card = document.createElement('div');
+                    card.className = 'summary-card';
+                    card.innerHTML = `
+                        <h3>${collectionInfo.title}</h3>
+                        <div class="count">${totalCount}</div>
+                        <div class="issues">${totalIssues > 0 ? `${totalIssues} ปัญหา` : 'ปกติ'}</div>
+                    `;
+                    cardContainer.appendChild(card);
+
+                    if (dataForCollectionDetails.length > 0) {
+                        const detailSection = document.createElement('div');
+                        const tableHeader = collectionInfo.name === 'repair_logs' ? `<th>วันที่</th><th>แผนก</th><th>รายการ</th><th>สถานะ</th>` : `<th>วันที่</th><th>อุปกรณ์</th><th>สถานะ</th><th>ผู้ตรวจ</th>`;
+                        detailSection.innerHTML = `
+                            <h2>รายละเอียด: ${collectionInfo.title} (${dataForCollectionDetails.length} รายการ)</h2>
+                            <table class="detail-table">
+                                <thead><tr>${tableHeader}</tr></thead>
+                                <tbody>${issuesHtml}</tbody>
+                            </table>
+                        `;
+                        detailsContainer.appendChild(detailSection);
+                    }
+                }
+
+                showNotification('', false, 1); // Hide loading
+            }
+
+
+            // --- EVENT LISTENERS ---
+            iconMenu.addEventListener('click', function(e) {
+                const selectedMenuItem = e.target.closest('.menu-item');
+                if (!selectedMenuItem) return;
+
+                menuItems.forEach(item => item.classList.remove('active'));
+                selectedMenuItem.classList.add('active');
+
+                const selectedType = selectedMenuItem.dataset.type;
+                inspectionTypeSelect.value = selectedType;
+                
+                [commonFields, submitArea, repairLogSection, generatorSection, pumpSection, firePumpSection, dashboardSection].forEach(el => el.classList.add('hidden'));
+
+                if (selectedType === 'dashboard') {
+                    dashboardSection.classList.remove('hidden');
+                    // Set default dates and load data
+                    const today = new Date();
+                    const lastMonth = new Date();
+                    lastMonth.setMonth(today.getMonth() - 1);
+                    dashboardEndDate.value = today.toISOString().slice(0,10);
+                    dashboardStartDate.value = lastMonth.toISOString().slice(0,10);
+                    
+                    filterButtons.querySelector('.active').classList.remove('active');
+                    filterButtons.querySelector('[data-filter="issues"]').classList.add('active');
+
+                    loadDashboardData();
+                } else if (selectedType) {
+                    commonFields.classList.remove('hidden');
+                    submitArea.classList.remove('hidden');
+                    if (selectedType === 'repair-log') {
+                        repairLogSection.classList.remove('hidden');
+                    } else if (selectedType === 'generator') {
+                        generatorSection.classList.remove('hidden');
+                        createChecklist(generatorChecklistItems, 'generator-checklist');
+                    } else if (selectedType === 'pump') {
+                        pumpSection.classList.remove('hidden');
+                        createChecklist(pumpChecklistItems, 'pump-checklist');
+                    } else if (selectedType === 'fire-pump') {
+                        firePumpSection.classList.remove('hidden');
+                        createChecklist(firePumpChecklistItems, 'fire-pump-checklist');
+                    }
+                }
+            });
+
+            dashboardStartDate.addEventListener('change', loadDashboardData);
+            dashboardEndDate.addEventListener('change', loadDashboardData);
+            filterButtons.addEventListener('click', function(e) {
+                if (e.target.classList.contains('filter-btn')) {
+                    filterButtons.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    loadDashboardData();
+                }
+            });
+
+            document.body.addEventListener('change', function(e) {
+                if (e.target.type === 'radio') {
+                    const row = e.target.closest('tr');
+                    if (row) {
+                        row.classList.toggle('fail', e.target.value === 'ไม่ผ่าน');
+                    }
+                }
+                if (e.target.id === 'generator-select' || e.target.id === 'fuel-liters') {
+                    updateFuelPercentage('generator-select', 'fuel-liters', 'gen-fuel-percentage', genTankCapacities);
+                }
+                if (e.target.id === 'fire-pump-select' || e.target.id === 'fire-pump-fuel-liters') {
+                    updateFuelPercentage('fire-pump-select', 'fire-pump-fuel-liters', 'fire-pump-fuel-percentage', firePumpTankCapacities);
+                }
+            });
+
+            geminiSuggestionBtn.addEventListener('click', async () => {
+                const problemDescription = repairItemTextarea.value;
+                if (!problemDescription.trim()) {
+                    showNotification('กรุณาอธิบายรายการที่ส่งซ่อมก่อน', true);
+                    return;
+                }
+
+                geminiSuggestionBtn.disabled = true;
+                const spinner = geminiSuggestionBtn.querySelector('.spinner');
+                const btnText = geminiSuggestionBtn.querySelector('.btn-text');
+                spinner.style.display = 'inline-block';
+                btnText.textContent = 'กำลังคิด...';
+
+                const prompt = `คุณคือช่างซ่อมบำรุงผู้เชี่ยวชาญ มีผู้ใช้แจ้งปัญหานี้: "${problemDescription}". โปรดให้คำแนะนำในการแก้ไขปัญหาเบื้องต้นเป็นขั้นตอนง่ายๆ ที่ช่างทั่วไปสามารถทำตามได้ ตอบเป็นภาษาไทยในรูปแบบรายการ`;
+
+                try {
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // API key is handled by the environment
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const suggestionText = result.candidates[0].content.parts[0].text;
+                        repairSolutionTextarea.value = suggestionText;
+                        repairSolutionTextarea.style.borderColor = 'var(--primary-accent)';
+                        setTimeout(() => {
+                            repairSolutionTextarea.style.borderColor = '';
+                        }, 2000);
+                    } else {
+                        throw new Error('No valid response from Gemini API.');
+                    }
+
+                } catch (error) {
+                    console.error("Gemini API error:", error);
+                    showNotification('เกิดข้อผิดพลาดในการขอคำแนะนำ', true);
+                } finally {
+                    geminiSuggestionBtn.disabled = false;
+                    spinner.style.display = 'none';
+                    btnText.innerHTML = '✨ ขอแนวทางการแก้ไข';
+                }
+            });
+
+            mainForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const type = inspectionTypeSelect.value;
+                if (!type) {
+                    showNotification('กรุณาเลือกประเภทการบันทึก', true);
+                    return;
+                }
+                if (!db) {
+                    showNotification('ไม่สามารถเชื่อมต่อฐานข้อมูลได้', true);
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                showNotification('กำลังบันทึก...', false, 0);
+
+                const dataToSave = {
+                    logType: type,
+                    recordedBy: document.getElementById('inspector-name').value,
+                    recordedAt: serverTimestamp(),
+                    date: document.getElementById('inspection-date').value,
+                    imageUrl: ''
+                };
+
+                const photoFile = document.getElementById('photo-upload').files[0];
+                if (photoFile) {
+                    const imageRef = ref(storage, `images/${Date.now()}_${photoFile.name}`);
+                    try {
+                        const snapshot = await uploadBytes(imageRef, photoFile);
+                        dataToSave.imageUrl = await getDownloadURL(snapshot.ref);
+                    } catch (error) {
+                        console.error("Image upload failed:", error);
+                        showNotification('อัปโหลดรูปภาพล้มเหลว', true);
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                }
+                
+                let collectionName = '';
+                if (type === 'repair-log') {
+                    collectionName = 'repair_logs';
+                    const status = document.getElementById('repair-status-select').value;
+                    Object.assign(dataToSave, {
+                        technicianType: document.getElementById('technician-type-select').value,
+                        department: document.getElementById('department-request').value,
+                        problem: document.getElementById('repair-item').value,
+                        solution: document.getElementById('repair-solution').value,
+                        timeTakenMinutes: document.getElementById('repair-time').value,
+                        status: status,
+                        hasIssue: status !== 'เสร็จสิ้น'
+                    });
+                } else {
+                    let checklistItems, checklistId, allPass = true;
+                    const checklistData = {};
+                    
+                    if (type === 'generator') {
+                        collectionName = 'generator_inspections';
+                        const genSelect = document.getElementById('generator-select');
+                        Object.assign(dataToSave, {
+                            unitName: genSelect.options[genSelect.selectedIndex].text,
+                            fuelLiters: document.getElementById('fuel-liters').value,
+                            fuelPercentage: document.getElementById('gen-fuel-percentage').textContent
+                        });
+                        checklistItems = generatorChecklistItems;
+                        checklistId = 'generator-checklist';
+                    } else if (type === 'pump') {
+                        collectionName = 'pump_inspections';
+                        const pumpSelect = document.getElementById('pump-select');
+                        Object.assign(dataToSave, {
+                            unitName: pumpSelect.options[pumpSelect.selectedIndex].text
+                        });
+                        checklistItems = pumpChecklistItems;
+                        checklistId = 'pump-checklist';
+                    } else { // fire-pump
+                        collectionName = 'fire_pump_inspections';
+                        const firePumpSelect = document.getElementById('fire-pump-select');
+                        Object.assign(dataToSave, {
+                            unitName: firePumpSelect.options[firePumpSelect.selectedIndex].text,
+                            fuelLiters: document.getElementById('fire-pump-fuel-liters').value,
+                            fuelPercentage: document.getElementById('fire-pump-fuel-percentage').textContent
+                        });
+                        checklistItems = firePumpChecklistItems;
+                        checklistId = 'fire-pump-checklist';
+                    }
+
+                    checklistItems.forEach((item, index) => {
+                        const id = `${checklistId}-item-${index}`;
+                        const status = mainForm.elements[id].value;
+                        const notes = mainForm.elements[id][0].closest('tr').querySelector('.notes-input').value;
+                        checklistData[item] = { status, notes };
+                        if (status === 'ไม่ผ่าน') allPass = false;
+                    });
+                    dataToSave.checklist = checklistData;
+                    dataToSave.overallStatus = allPass ? 'ปกติ' : 'พบข้อบกพร่อง';
+                    dataToSave.hasIssue = !allPass;
+                }
+
+                try {
+                    const docPath = `/artifacts/${appId}/public/data/${collectionName}`;
+                    const docRef = await addDoc(collection(db, docPath), dataToSave);
+                    console.log("Document written with ID: ", docRef.id);
+                    showNotification('บันทึกข้อมูลสำเร็จ!', false, 2000);
+                    mainForm.reset();
+                    document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+                    [commonFields, submitArea, repairLogSection, generatorSection, pumpSection, firePumpSection, dashboardSection].forEach(el => el.classList.add('hidden'));
+                } catch (error) {
+                    console.error("Error adding document: ", error);
+                    showNotification('การบันทึกข้อมูลล้มเหลว!', true);
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+
+            themeSwitcher.addEventListener('click', function(e) {
+                const themeDot = e.target.closest('.theme-dot');
+                if (themeDot) {
+                    setTheme(themeDot.dataset.theme);
+                }
+            });
+
+            // --- INITIALIZATION ---
+            document.getElementById('inspection-date').valueAsDate = new Date();
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+        });
+    </script>
+</body>
+</html>
