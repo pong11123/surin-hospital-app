@@ -199,7 +199,7 @@
         }
         .checklist-table th, .checklist-table td {
             border: 1px solid var(--border-color);
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: left;
             vertical-align: middle;
         }
@@ -210,12 +210,11 @@
         }
         .checklist-table tbody tr { transition: background-color 0.2s; }
         .checklist-table tbody tr:hover { background-color: color-mix(in srgb, var(--bg-card) 80%, #fff 20%); }
-        .notes-input {
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
+        .value-input, .reason-input {
+            width: 100%;
+            box-sizing: border-box;
         }
-        .radio-group { display: flex; gap: 1.5rem; }
+        .radio-group { display: flex; gap: 1rem; align-items: center; }
         .radio-group label {
             color: var(--text-main);
             cursor: pointer;
@@ -547,7 +546,7 @@
                 </div>
                 <div class="menu-item" data-type="pump">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m-3-1-3-1.091m0 0-3 1.091m0 0-3-1.091m0 0-4.5 1.636M12.75 12.75l-3-1.091" /></svg>
-                    <span>ระบบปั้มน้ำ</span>
+                    <span>ระบบสูบน้ำประจำตึก</span>
                 </div>
                 <div class="menu-item" data-type="fire-pump">
                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
@@ -571,7 +570,28 @@
                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
                         ชื่อผู้บันทึก (ช่างเวร)
                     </label>
-                    <input type="text" id="inspector-name" placeholder="กรอกชื่อ-นามสกุล" required>
+                    <select id="inspector-name" required>
+                        <option value="">-- กรุณาเลือกชื่อ --</option>
+                        <optgroup label="แผนกประปา-ครุภัณฑ์">
+                            <option value="นายฉัตรชัย บูรณะ">นายฉัตรชัย บูรณะ</option>
+                            <option value="นายยุทธการ สงวนดี">นายยุทธการ สงวนดี</option>
+                            <option value="นายจตุพล สะสี">นายจตุพล สะสี</option>
+                            <option value="นายสุกิจน์ แยบดี">นายสุกิจน์ แยบดี</option>
+                            <option value="นายภานุวัฒน์ วันสุข">นายภานุวัฒน์ วันสุข</option>
+                            <option value="นายปกรณ์กิต ทิพวงษ์เทวัญ">นายปกรณ์กิต ทิพวงษ์เทวัญ</option>
+                            <option value="นายเทวิน รัตนพันธ์">นายเทวิน รัตนพันธ์</option>
+                        </optgroup>
+                        <optgroup label="แผนกไฟฟ้า-อิเล็กทรอนิกส์">
+                            <option value="นายณัชชนม์ ทองจิว">นายณัชชนม์ ทองจิว</option>
+                            <option value="นายสัญชัย ครอบแก้ว">นายสัญชัย ครอบแก้ว</option>
+                            <option value="นายธนดล คาศรี">นายธนดล คาศรี</option>
+                            <option value="นายปิยบุตร สะสี">นายปิยบุตร สะสี</option>
+                            <option value="นายอัธยา วงศ์ประเทศ">นายอัธยา วงศ์ประเทศ</option>
+                            <option value="นายเกียรติศักดิ์ การกลจักร">นายเกียรติศักดิ์ การกลจักร</option>
+                            <option value="นายพลวัฒน์ ไชยรัตน์">นายพลวัฒน์ ไชยรัตน์</option>
+                            <option value="ว่าที่ร้อยตรีวัชวัฒน์ ชมดี">ว่าที่ร้อยตรีวัชวัฒน์ ชมดี</option>
+                        </optgroup>
+                    </select>
                 </div>
             </div>
 
@@ -703,21 +723,21 @@
                  <div class="form-group">
                     <label for="pump-select">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m-3-1-3-1.091m0 0-3 1.091m0 0-3-1.091m0 0-4.5 1.636M12.75 12.75l-3-1.091" /></svg>
-                        เลือกระบบปั้มน้ำ
+                        เลือกระบบสูบน้ำประจำตึก
                     </label>
                     <select id="pump-select">
                         <option value="">-- กรุณาเลือกตึก --</option>
-                        <option value="pump_hosung">ระบบปั้มน้ำ หอสูง</option>
-                        <option value="pump_a2">ระบบปั้มน้ำ อ. 2</option>
-                        <option value="pump_a4">ระบบปั้มน้ำ อ. 4</option>
-                        <option value="pump_a6">ระบบปั้มน้ำ อ. 6</option>
-                        <option value="pump_a9">ระบบปั้มน้ำ อ. 9</option>
-                        <option value="pump_a12">ระบบปั้มน้ำ อ. 12</option>
-                        <option value="pump_a14">ระบบปั้มน้ำ อ. 14</option>
-                        <option value="pump_a16">ระบบปั้มน้ำ อ. 16</option>
-                        <option value="pump_a17">ระบบปั้มน้ำ อ. 17 (LAB)</option>
-                        <option value="pump_a21">ระบบปั้มน้ำ อ. 21 (ศูนย์แพทย์)</option>
-                        <option value="pump_a23">ระบบปั้มน้ำ อ. 23 (OPD)</option>
+                        <option value="pump_hosung">ระบบสูบน้ำ หอสูง</option>
+                        <option value="pump_a2">ระบบสูบน้ำ อ. 2</option>
+                        <option value="pump_a4">ระบบสูบน้ำ อ. 4</option>
+                        <option value="pump_a6">ระบบสูบน้ำ อ. 6</option>
+                        <option value="pump_a9">ระบบสูบน้ำ อ. 9</option>
+                        <option value="pump_a12">ระบบสูบน้ำ อ. 12</option>
+                        <option value="pump_a14">ระบบสูบน้ำ อ. 14</option>
+                        <option value="pump_a16">ระบบสูบน้ำ อ. 16</option>
+                        <option value="pump_a17">ระบบสูบน้ำ อ. 17 (LAB)</option>
+                        <option value="pump_a21">ระบบสูบน้ำ อ. 21 (ศูนย์แพทย์)</option>
+                        <option value="pump_a23">ระบบสูบน้ำ อ. 23 (OPD)</option>
                     </select>
                 </div>
                 <div class="table-wrapper">
@@ -877,13 +897,14 @@
 
             function createChecklist(items, containerId) {
                 const container = document.getElementById(containerId);
-                if (container.hasChildNodes()) return;
+                container.innerHTML = ''; // Clear previous checklist
                 const header = document.createElement('thead');
                 header.innerHTML = `
                     <tr>
                         <th>รายการตรวจสอบ</th>
-                        <th style="width: 200px;">ผลการตรวจ</th>
-                        <th>หมายเหตุ/ค่าที่วัด</th>
+                        <th style="width: 220px;">ผลการตรวจ</th>
+                        <th>ค่าที่วัดได้</th>
+                        <th>สาเหตุ (ถ้าผิดปกติ)</th>
                     </tr>`;
                 const body = document.createElement('tbody');
                 items.forEach((item, index) => {
@@ -893,11 +914,12 @@
                         <td>${item}</td>
                         <td>
                             <div class="radio-group">
-                                <label><input type="radio" name="${id}" value="ผ่าน" required><span></span> ผ่าน</label>
-                                <label><input type="radio" name="${id}" value="ไม่ผ่าน"><span></span> ไม่ผ่าน</label>
+                                <label><input type="radio" name="${id}-status" value="ปกติ" required checked><span></span> ปกติ</label>
+                                <label><input type="radio" name="${id}-status" value="ผิดปกติ"><span></span> ผิดปกติ</label>
                             </div>
                         </td>
-                        <td><input type="text" class="notes-input" placeholder="ค่าที่วัด/รายละเอียด..."></td>
+                        <td><input type="text" class="value-input" placeholder="ค่าที่วัด..."></td>
+                        <td><textarea class="reason-input" placeholder="กรอกสาเหตุ..."></textarea></td>
                     `;
                     body.appendChild(row);
                 });
@@ -946,7 +968,7 @@
                 const collectionsToFetch = [
                     { name: 'repair_logs', title: 'แจ้งซ่อม' },
                     { name: 'generator_inspections', title: 'เครื่องกำเนิดไฟฟ้า' },
-                    { name: 'pump_inspections', title: 'ปั้มน้ำ' },
+                    { name: 'pump_inspections', title: 'ระบบสูบน้ำ' },
                     { name: 'fire_pump_inspections', title: 'ดับเพลิง' }
                 ];
 
@@ -1080,10 +1102,16 @@
             });
 
             document.body.addEventListener('change', function(e) {
-                if (e.target.type === 'radio') {
+                if (e.target.type === 'radio' && e.target.name.endsWith('-status')) {
                     const row = e.target.closest('tr');
                     if (row) {
-                        row.classList.toggle('fail', e.target.value === 'ไม่ผ่าน');
+                        const reasonTextarea = row.querySelector('.reason-input');
+                        const isAbnormal = e.target.value === 'ผิดปกติ';
+                        row.classList.toggle('fail', isAbnormal);
+                        if (reasonTextarea) {
+                            reasonTextarea.required = isAbnormal;
+                            reasonTextarea.style.borderColor = isAbnormal ? 'var(--danger-color)' : '';
+                        }
                     }
                 }
                 if (e.target.id === 'generator-select' || e.target.id === 'fuel-liters') {
@@ -1163,6 +1191,27 @@
                     return;
                 }
 
+                // Validation for abnormal reasons
+                let validationPassed = true;
+                const activeChecklist = document.querySelector('.checklist-table:not(.hidden)');
+                if (activeChecklist) {
+                    const rows = activeChecklist.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const radioAbnormal = row.querySelector('input[value="ผิดปกติ"]');
+                        const reasonTextarea = row.querySelector('.reason-input');
+                        if (radioAbnormal && radioAbnormal.checked && !reasonTextarea.value.trim()) {
+                            reasonTextarea.style.borderColor = 'var(--danger-color)';
+                            validationPassed = false;
+                        }
+                    });
+                }
+
+                if (!validationPassed) {
+                    showNotification('กรุณากรอกสาเหตุสำหรับทุกรายการที่ "ผิดปกติ"', true);
+                    return;
+                }
+
+
                 submitBtn.disabled = true;
                 showNotification('กำลังบันทึก...', false, 0);
 
@@ -1237,10 +1286,12 @@
 
                     checklistItems.forEach((item, index) => {
                         const id = `${checklistId}-item-${index}`;
-                        const status = mainForm.elements[id].value;
-                        const notes = mainForm.elements[id][0].closest('tr').querySelector('.notes-input').value;
-                        checklistData[item] = { status, notes };
-                        if (status === 'ไม่ผ่าน') allPass = false;
+                        const row = mainForm.elements[`${id}-status`][0].closest('tr');
+                        const status = mainForm.elements[`${id}-status`].value;
+                        const value = row.querySelector('.value-input').value;
+                        const reason = row.querySelector('.reason-input').value;
+                        checklistData[item] = { status, value, reason };
+                        if (status === 'ผิดปกติ') allPass = false;
                     });
                     dataToSave.checklist = checklistData;
                     dataToSave.overallStatus = allPass ? 'ปกติ' : 'พบข้อบกพร่อง';
@@ -1253,6 +1304,7 @@
                     console.log("Document written with ID: ", docRef.id);
                     showNotification('บันทึกข้อมูลสำเร็จ!', false, 2000);
                     mainForm.reset();
+                    document.getElementById('inspection-date').valueAsDate = new Date();
                     document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
                     [commonFields, submitArea, repairLogSection, generatorSection, pumpSection, firePumpSection, dashboardSection].forEach(el => el.classList.add('hidden'));
                 } catch (error) {
