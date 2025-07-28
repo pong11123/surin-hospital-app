@@ -58,12 +58,12 @@
         body {
             font-family: 'Sarabun', sans-serif;
             margin: 0;
-            padding: 1.5rem;
-            background-color: transparent; /* Make body transparent to see html background */
+            padding: 1rem;
+            background-color: transparent;
             color: var(--text-main);
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Changed to flex-start for long forms */
+            align-items: flex-start;
             min-height: 100vh;
             position: relative;
             z-index: 1;
@@ -78,7 +78,7 @@
             width: 100%;
             height: 100%;
             background-color: var(--bg-main);
-            opacity: 0.85; /* Adjust this value for fade effect */
+            opacity: 0.85;
             z-index: -1;
             transition: background-color 0.3s ease;
         }
@@ -92,8 +92,8 @@
             box-shadow: 0 10px 30px var(--shadow-color);
             border: 1px solid var(--border-color);
             transition: background-color 0.3s ease, border-color 0.3s ease;
-            margin-top: 2rem; /* Add margin for spacing */
-            margin-bottom: 2rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
         }
         h1 {
             color: var(--text-main);
@@ -109,9 +109,9 @@
 
         /* --- THEME SWITCHER --- */
         .theme-switcher {
-            position: fixed; /* Changed to fixed */
-            top: 1.5rem;
-            right: 1.5rem;
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
             display: flex;
             gap: 0.5rem;
             background-color: var(--bg-card);
@@ -473,6 +473,45 @@
             to { transform: rotate(360deg); }
         }
 
+        /* --- RESPONSIVE STYLES --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 0.5rem;
+                align-items: flex-start;
+            }
+            .container {
+                padding: 1.5rem;
+                margin-top: 1rem;
+                margin-bottom: 1rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .icon-menu {
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+            .dashboard-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .table-wrapper {
+                width: 100%;
+                overflow-x: auto;
+            }
+            .checklist-table, .detail-table {
+               min-width: 600px; /* Ensure table has a minimum width before scrolling */
+            }
+            .theme-switcher {
+                top: 0.5rem;
+                right: 0.5rem;
+            }
+            .fuel-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -557,8 +596,10 @@
                 <div class="summary-cards" id="dashboard-summary-cards">
                     <!-- Cards will be injected here -->
                 </div>
-                <div id="dashboard-details">
-                    <!-- Details will be injected here -->
+                <div class="table-wrapper">
+                    <div id="dashboard-details">
+                        <!-- Details will be injected here -->
+                    </div>
                 </div>
             </div>
 
@@ -652,7 +693,9 @@
                         <span id="gen-fuel-percentage" class="fuel-percentage-span">-- %</span>
                     </div>
                 </div>
-                <table class="checklist-table" id="generator-checklist"></table>
+                <div class="table-wrapper">
+                    <table class="checklist-table" id="generator-checklist"></table>
+                </div>
             </div>
 
             <!-- Pump Section -->
@@ -677,7 +720,9 @@
                         <option value="pump_a23">ระบบปั้มน้ำ อ. 23 (OPD)</option>
                     </select>
                 </div>
-                 <table class="checklist-table" id="pump-checklist"></table>
+                <div class="table-wrapper">
+                    <table class="checklist-table" id="pump-checklist"></table>
+                </div>
             </div>
             
             <!-- Fire Pump Section -->
@@ -704,7 +749,9 @@
                         <span id="fire-pump-fuel-percentage" class="fuel-percentage-span">-- %</span>
                     </div>
                 </div>
-                 <table class="checklist-table" id="fire-pump-checklist"></table>
+                <div class="table-wrapper">
+                    <table class="checklist-table" id="fire-pump-checklist"></table>
+                </div>
             </div>
 
             <!-- Common Submit Area -->
