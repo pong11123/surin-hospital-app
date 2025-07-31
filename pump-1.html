@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจเช็คเครื่องจักรและรายงานเหตุการณ์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
+        .tab-active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .status-normal { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); }
+        .status-abnormal { background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div class="flex-1">
+                    <h1 class="text-3xl font-bold text-center">ระบบตรวจเช็คเครื่องจักรและรายงานเหตุการณ์</h1>
+                    <p class="text-center mt-2 opacity-90">Generator • Fire Pump • Water Pump Inspection System</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div id="connection-status" class="flex items-center space-x-2 bg-white bg-opacity-20 rounded-lg px-3 py-2">
+                        <div id="status-indicator" class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <span id="status-text" class="text-sm">กำลังเชื่อมต่อ...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-1">
+                <button onclick="showTab('daily')" id="daily-tab" class="tab-active text-white px-6 py-3 rounded-t-lg font-medium transition-all">
+                    ตรวจเช็ครายวัน
+                </button>
+                <button onclick="showTab('weekly')" id="weekly-tab" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-t-lg font-medium transition-all hover:bg-gray-300">
+                    ตรวจเช็ครายสัปดาห์
+                </button>
+                <button onclick="showTab('incident')" id="incident-tab" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-t-lg font-medium transition-all hover:bg-gray-300">
+                    รายงานเหตุการณ์
+                </button>
+                <button onclick="showTab('inventory')" id="inventory-tab" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-t-lg font-medium transition-all hover:bg-gray-300">
+                    ข้อมูลเครื่องจักร
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Daily Inspection Tab -->
+        <div id="daily-content" class="tab-content">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">การตรวจเช็ครายวัน</h2>
+                    <div class="flex items-center space-x-4">
+                        <input type="date" id="daily-date" class="border rounded-lg px-3 py-2" value="">
+                        <select id="shift-select" class="border rounded-lg px-3 py-2">
+                            <option value="morning">เวรเช้า (08:00-16:00)</option>
+                            <option value="afternoon">เวรบ่าย (16:00-24:00)</option>
+                            <option value="night">เวรดึก (24:00-08:00)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Water Pump Systems -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-blue-800">🏢 ระบบสูบน้ำประจำตึก</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="water-pumps">
+                        <!-- Water pump items will be generated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Fire Pump Systems -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-red-800">🚒 เครื่องสูบน้ำดับเพลิง (Fire Pump)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="fire-pumps">
+                        <!-- Fire pump items will be generated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Generators -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-yellow-800">⚡ เครื่องกำเนิดไฟฟ้า (Generator)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="generators">
+                        <!-- Generator items will be generated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="flex justify-center">
+                    <button onclick="saveDailyInspection()" class="gradient-bg text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-all">
+                        บันทึกการตรวจเช็ครายวัน
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Inspection Tab -->
+        <div id="weekly-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">การตรวจเช็ครายสัปดาห์</h2>
+                    <input type="week" id="weekly-date" class="border rounded-lg px-3 py-2">
+                </div>
+
+                <div class="space-y-6" id="weekly-inspections">
+                    <!-- Weekly inspection items will be generated by JavaScript -->
+                </div>
+
+                <div class="flex justify-center mt-6">
+                    <button onclick="saveWeeklyInspection()" class="gradient-bg text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-all">
+                        บันทึกการตรวจเช็ครายสัปดาห์
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incident Report Tab -->
+        <div id="incident-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">รายงานเหตุการณ์และแจ้งซ่อม</h2>
+                
+                <form id="incident-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">วันที่เกิดเหตุการณ์</label>
+                            <input type="datetime-local" id="incident-date" class="w-full border rounded-lg px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ประเภทเครื่องจักร</label>
+                            <select id="incident-type" class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="">เลือกประเภท</option>
+                                <option value="generator">เครื่องกำเนิดไฟฟ้า</option>
+                                <option value="fire-pump">เครื่องสูบน้ำดับเพลิง</option>
+                                <option value="water-pump">ระบบสูบน้ำประจำตึก</option>
+                                <option value="elevator">ลิฟต์</option>
+                                <option value="electrical">ระบบไฟฟ้า</option>
+                                <option value="plumbing">ระบบประปา</option>
+                                <option value="air-conditioning">เครื่องปรับอากาศ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">แผนก/สถานที่</label>
+                            <select id="incident-location" class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="">เลือกแผนก/สถานที่</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ระดับความรุนแรง</label>
+                            <select id="incident-severity" class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="low">ต่ำ - ไม่กระทบการใช้งาน</option>
+                                <option value="medium">กลาง - กระทบการใช้งานบางส่วน</option>
+                                <option value="high">สูง - หยุดการใช้งานทั้งหมด</option>
+                                <option value="critical">วิกฤต - เสี่ยงต่อความปลอดภัย</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">เวลาที่ใช้ในการแก้ไข (นาที)</label>
+                            <input type="number" id="repair-time" class="w-full border rounded-lg px-3 py-2" placeholder="ระบุเวลาที่ใช้" min="0">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">รายละเอียดเหตุการณ์</label>
+                        <textarea id="incident-description" rows="4" class="w-full border rounded-lg px-3 py-2" placeholder="อธิบายเหตุการณ์ที่เกิดขึ้น..." required></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">การแก้ไขเบื้องต้น</label>
+                        <textarea id="incident-action" rows="3" class="w-full border rounded-lg px-3 py-2" placeholder="บันทึกการแก้ไขที่ได้ดำเนินการแล้ว..."></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">สถานะการดำเนินการ</label>
+                            <select id="incident-status" class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="in-progress">กำลังดำเนินการอยู่</option>
+                                <option value="forwarded">ส่งต่อ</option>
+                                <option value="waiting">รออนุมัติ</option>
+                                <option value="completed">เสร็จสิ้น</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อผู้ส่งซ่อม</label>
+                            <input type="text" id="repair-sender" class="w-full border rounded-lg px-3 py-2" placeholder="ชื่อผู้ส่งซ่อม" required>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ผู้รายงาน</label>
+                        <input type="text" id="incident-reporter" class="w-full border rounded-lg px-3 py-2" placeholder="ชื่อผู้รายงาน" required>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <button type="submit" class="gradient-bg text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-all">
+                            บันทึกรายงานเหตุการณ์
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Incident History -->
+                <div class="mt-8">
+                    <h3 class="text-xl font-semibold mb-4">ประวัติการรายงานเหตุการณ์</h3>
+                    <div id="incident-history" class="space-y-4">
+                        <!-- Incident history will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="inventory-content" class="tab-content hidden">
+            <div class="space-y-6">
+                <!-- Generator Inventory -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">⚡ ข้อมูลเครื่องกำเนิดไฟฟ้า</h2>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-300">
+                            <thead class="gradient-bg text-white">
+                                <tr>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">KVA Rating</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">สถานที่</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">ความจุถังน้ำมัน (ลิตร)</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">ผู้ผลิต</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">รุ่น</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">ผู้ให้บริการซ่อมบำรุง</th>
+                                </tr>
+                            </thead>
+                            <tbody id="generator-inventory">
+                                <!-- Generator inventory will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Elevator Inventory -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">🏢 ข้อมูลลิฟต์</h2>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-300">
+                            <thead class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                                <tr>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">สถานที่</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">ประเภท</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left">ยี่ห้อ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="elevator-inventory">
+                                <!-- Elevator inventory will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+            <div class="text-center">
+                <div class="text-green-500 text-6xl mb-4">✓</div>
+                <h3 class="text-xl font-semibold mb-2">บันทึกสำเร็จ!</h3>
+                <p class="text-gray-600 mb-4" id="success-message">ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว</p>
+                <button onclick="closeModal()" class="gradient-bg text-white px-6 py-2 rounded-lg">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkfwTB5ZOdEVAIBpx6jwGYRxJ-APUpkiU",
+            authDomain: "hospital-surin-app.firebaseapp.com",
+            projectId: "hospital-surin-app",
+            storageBucket: "hospital-surin-app.firebasestorage.app",
+            messagingSenderId: "430614964196",
+            appId: "1:430614964196:web:31f9678ac47958f9f389f1",
+            measurementId: "G-D8DE0MWP1L"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Connection status monitoring
+        function updateConnectionStatus(isConnected) {
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            if (isConnected) {
+                indicator.className = 'w-3 h-3 rounded-full bg-green-400';
+                statusText.textContent = 'เชื่อมต่อ Firebase';
+            } else {
+                indicator.className = 'w-3 h-3 rounded-full bg-red-400';
+                statusText.textContent = 'ออฟไลน์';
+            }
+        }
+
+        // Test Firebase connection
+        async function testFirebaseConnection() {
+            try {
+                await db.collection('test').limit(1).get();
+                updateConnectionStatus(true);
+            } catch (error) {
+                console.error('Firebase connection failed:', error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Data
+        const generatorData = [
+            { kva: "1250 Kva", location: "อาคาร22", fuelCapacity: 2200, manufacturer: "MTU", model: "742RSL4048", provider: "บริษัท วินบริดจ์ จำกัด" },
+            { kva: "1000 Kva", location: "อาคาร2", fuelCapacity: 1400, manufacturer: "MTU", model: "N/A", provider: "บริษัท อีเอ เมคคานิกส์ จำกัด" },
+            { kva: "625 Kva", location: "อาคาร6", fuelCapacity: 1500, manufacturer: "MAN", model: "D2842LE203", provider: "บริษัท พัฒนายนต์ชลบุรี" },
+            { kva: "1000 Kva", location: "อาคาร6", fuelCapacity: 2000, manufacturer: "Baudouin", model: "TTG000BM", provider: "บริษัท ลิฟท์ไทยเทค จำกัด" },
+            { kva: "625 Kva", location: "อาคาร9", fuelCapacity: 1000, manufacturer: "Perkins", model: "2806A-E18TAG2", provider: "บริษัท โอ เอ เซลล์ แอนด์ เซอร์วิส จำกัด" },
+            { kva: "500 Kva", location: "อาคาร16", fuelCapacity: 1000, manufacturer: "FG Wilson", model: "P550-3", provider: "บริษัท วินบริดจ์ จำกัด" },
+            { kva: "625 Kva", location: "อาคาร21", fuelCapacity: 800, manufacturer: "Cummins", model: "ECO40 15L4", provider: "บริษัท จี61 เอนจิเนียริ่ง จำกัด" },
+            { kva: "13.5 KW", location: "Kipor Mobile", fuelCapacity: 30, manufacturer: "Kipor", model: "N/A", provider: "N/A" }
+        ];
+
+        const elevatorData = [
+            { location: "แฟลต ศูนย์แพทยศาสตร์", type: "โดยสาร", manufacturer: "มิตซูบิชิ" },
+            { location: "อาคาร 12 หอผู้ป่วยพิเศษ", type: "ลิฟท์เตียง", manufacturer: "ฮิตาชิ" },
+            { location: "อาคาร 12 หอผู้ป่วยพิเศษ", type: "ลิฟท์เตียง", manufacturer: "ฮิตาชิ" },
+            { location: "อาคาร 14 หอผู้ป่วยอายุรกรรม", type: "ลิฟท์เตียง", manufacturer: "ไทเทค" },
+            { location: "อาคาร 14 หอผู้ป่วยอายุรกรรม", type: "ลิฟท์เตียง", manufacturer: "ไทเทค" },
+            { location: "อาคาร 14 หอผู้ป่วยอายุรกรรม", type: "ขนขยะ", manufacturer: "ไทเทค" },
+            { location: "อาคาร 16 หอผู้ป่วยโรคมะเร็งและสงฆ์อาพาธ", type: "ลิฟท์เตียง", manufacturer: "ไพโอเนียร์" },
+            { location: "อาคาร 16 หอผู้ป่วยโรคมะเร็งและสงฆ์อาพาธ", type: "ลิฟท์เตียง", manufacturer: "ไพโอเนียร์" },
+            { location: "อาคาร 16 หอผู้ป่วยโรคมะเร็งและสงฆ์อาพาธ", type: "ขนขยะ", manufacturer: "ไทเทค" },
+            { location: "อาคาร 17 ( ครัวหลวง)", type: "ขนอาหาร", manufacturer: "ไทเทค" },
+            { location: "อาคาร 17 (ตึกแลป)", type: "ลิฟท์โดยสาร", manufacturer: "ไทเทค" },
+            { location: "อาคาร 18 ซักฟอก", type: "ขนขยะ", manufacturer: "ไทเทค" },
+            { location: "อาคาร 21 ศูนย์แพทยศาสตร์", type: "ลิฟท์โดยสาร", manufacturer: "ฮิตาชิ" },
+            { location: "อาคาร 21 ศูนย์แพทยศาสตร์", type: "ลิฟท์โดยสาร", manufacturer: "ฮิตาชิ" },
+            { location: "อาคาร 22 100ปี ปีสาธารณสุขไทย", type: "ลิฟท์เตียง", manufacturer: "ฮิตาชิ" },
+            { location: "อาคาร 22 100ปี ปีสาธารณสุขไทย", type: "ลิฟท์เตียง", manufacturer: "ฮิตาชิ" },
+            { location: "อาคาร 22 100ปี ปีสาธารณสุขไทย", type: "ลิฟท์หนี้ไฟ", manufacturer: "ฮิตาชิ" },
+            { location: "อาคาร 22 100ปี ปีสาธารณสุขไทย", type: "ขน เอกสาร", manufacturer: "ไพโอเนียร์" },
+            { location: "อาคาร 2 อุบัติเหตุและฉุกเฉิน", type: "ลิฟท์เตียง", manufacturer: "ไทเทค" },
+            { location: "อาคาร 2 อุบัติเหตุและฉุกเฉิน", type: "ลิฟท์เตียง", manufacturer: "ไทเทค" },
+            { location: "อาคาร 2 อุบัติเหตุและฉุกเฉิน", type: "ลิฟท์หนี้ไฟ", manufacturer: "ไทเทค" },
+            { location: "อาคาร 4", type: "ลิฟท์เตียง", manufacturer: "มิตซูบิชิ" },
+            { location: "อาคาร 4", type: "ลิฟท์เตียง", manufacturer: "มิตซูบิชิ" },
+            { location: "อาคาร 6 กุมารเวชกรรม", type: "ลิฟท์เตียง", manufacturer: "ฟูจิเทค" },
+            { location: "อาคาร 9 ศัลยกรรมทั่วไป", type: "ลิฟท์เตียง", manufacturer: "มิตซูบิชิ" },
+            { location: "อาคาร 9 ศัลยกรรมทั่วไป", type: "ลิฟท์เตียง", manufacturer: "มิตซูบิชิ" },
+            { location: "อาคาร 9 ศัลยกรรมทั่วไป", type: "ขนขยะ", manufacturer: "ไทเทค" },
+            { location: "อาคาร สนับสนุน อาหารและยา", type: "ลิฟท์เตียง", manufacturer: "มิตซูบิชิ" },
+            { location: "อาคาร สนับสนุน อาหารและยา", type: "ลิฟท์เตียง", manufacturer: "มิตซูบิชิ" },
+            { location: "อาคาร สนับสนุน อาหารและยา", type: "ลิฟท์เตียง", manufacturer: "มิตซูบิชิ" },
+            { location: "อาคาร สนับสนุน อาหารและยา", type: "ลิฟท์เตียง", manufacturer: "มิตซูบิชิ" }
+        ];
+
+        const waterPumpLocations = ["หอสูง", "อาคาร2", "อาคาร4", "อาคาร6", "อาคาร9", "อาคาร12", "อาคาร14", "อาคาร16", "อาคาร17 (LAB)", "อาคาร21 (ศูนย์แพทย์)", "อาคาร23 (OPD)"];
+        const firePumpLocations = ["อาคาร2", "อาคาร21", "อาคาร22"];
+        
+        const departmentLocations = [
+            "แผนกอายุรกรรม", "แผนกศัลยกรรม", "แผนกกุมารเวชกรรม", "แผนกสูติ-นรีเวชกรรม", 
+            "แผนกออร์โธปิดิกส์", "แผนกจักษุวิทยา", "แผนกหู คอ จมูก", "แผนกทันตกรรม",
+            "แผนกรังสีวิทยา", "แผนกพยาธิวิทยา", "แผนกเวชกรรมฟื้นฟู", "แผนกจิตเวช",
+            "แผนกอุบัติเหตุและฉุกเฉิน", "แผนกเภสัชกรรม", "แผนกโภชนาการ", "แผนกพยาบาล",
+            "แผนกการเงิน", "แผนกบุคคล", "แผนกประชาสัมพันธ์", "แผนกเวชระเบียน",
+            "แผนกซักฟอก", "แผนกโรงครัว", "แผนกรักษาความปลอดภัย", "แผนกช่าง",
+            "อาคาร2", "อาคาร4", "อาคาร6", "อาคาร9", "อาคาร12", "อาคาร14", 
+            "อาคาร16", "อาคาร17", "อาคาร18", "อาคาร21", "อาคาร22", "อาคาร23"
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('daily-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('weekly-date').value = getWeekString();
+            generateDailyInspectionItems();
+            generateWeeklyInspectionItems();
+            populateGeneratorInventory();
+            populateElevatorInventory();
+            updateIncidentLocationOptions();
+            
+            // Test Firebase connection
+            testFirebaseConnection();
+            
+            // Test connection every 30 seconds
+            setInterval(testFirebaseConnection, 30000);
+        });
+
+        function getWeekString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const week = Math.ceil((now - new Date(year, 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+            return `${year}-W${week.toString().padStart(2, '0')}`;
+        }
+
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('tab-active', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+
+            // Show selected tab
+            document.getElementById(`${tabName}-content`).classList.remove('hidden');
+            document.getElementById(`${tabName}-tab`).classList.add('tab-active', 'text-white');
+            document.getElementById(`${tabName}-tab`).classList.remove('bg-gray-200', 'text-gray-700');
+        }
+
+        function generateDailyInspectionItems() {
+            // Water Pumps
+            const waterPumpsContainer = document.getElementById('water-pumps');
+            waterPumpsContainer.innerHTML = waterPumpLocations.map((location, index) => `
+                <div class="bg-gray-50 rounded-lg p-4 card-hover transition-all">
+                    <h4 class="font-semibold mb-3">${location}</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <input type="radio" name="water-pump-${index}" value="normal" id="water-normal-${index}" class="text-green-500">
+                            <label for="water-normal-${index}" class="text-sm">ปกติ</label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="radio" name="water-pump-${index}" value="abnormal" id="water-abnormal-${index}" class="text-red-500">
+                            <label for="water-abnormal-${index}" class="text-sm">ผิดปกติ</label>
+                        </div>
+                        <textarea placeholder="หมายเหตุ / สาเหตุ / การแก้ไข" class="w-full text-xs border rounded p-2 mt-2" rows="2"></textarea>
+                    </div>
+                </div>
+            `).join('');
+
+            // Fire Pumps
+            const firePumpsContainer = document.getElementById('fire-pumps');
+            firePumpsContainer.innerHTML = firePumpLocations.map((location, index) => `
+                <div class="bg-gray-50 rounded-lg p-4 card-hover transition-all">
+                    <h4 class="font-semibold mb-3">${location}</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">ทดสอบระบบ Start Manual</label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="fire-start-${index}" value="normal" class="mr-1">
+                                    <span class="text-sm">ปกติ</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="fire-start-${index}" value="abnormal" class="mr-1">
+                                    <span class="text-sm">ผิดปกติ</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">ระดับน้ำมัน (ลิตร)</label>
+                            <input type="number" placeholder="ระดับน้ำมัน" class="w-full border rounded px-2 py-1 text-sm">
+                        </div>
+                        <textarea placeholder="หมายเหตุ / สาเหตุ / การแก้ไข" class="w-full text-xs border rounded p-2" rows="2"></textarea>
+                    </div>
+                </div>
+            `).join('');
+
+            // Generators
+            const generatorsContainer = document.getElementById('generators');
+            generatorsContainer.innerHTML = generatorData.map((gen, index) => `
+                <div class="bg-gray-50 rounded-lg p-4 card-hover transition-all">
+                    <h4 class="font-semibold mb-2">${gen.location}</h4>
+                    <p class="text-sm text-gray-600 mb-3">${gen.kva} - ${gen.manufacturer}</p>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">สถานะการทำงาน</label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="gen-status-${index}" value="normal" class="mr-1">
+                                    <span class="text-sm">ปกติ</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="gen-status-${index}" value="abnormal" class="mr-1">
+                                    <span class="text-sm">ผิดปกติ</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">ระดับน้ำมัน (ลิตร)</label>
+                            <input type="number" placeholder="ระดับน้ำมัน" max="${gen.fuelCapacity}" class="w-full border rounded px-2 py-1 text-sm">
+                        </div>
+                        <textarea placeholder="หมายเหตุ / สาเหตุ / การแก้ไข" class="w-full text-xs border rounded p-2" rows="2"></textarea>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateWeeklyInspectionItems() {
+            const weeklyContainer = document.getElementById('weekly-inspections');
+            
+            // Generator inspection categories
+            const generatorInspectionCategories = [
+                {
+                    title: "🔍 1. ตรวจสอบทั่วไป (Visual Inspection)",
+                    items: [
+                        "ตรวจสอบสภาพภายนอกเครื่อง (ไม่มีน้ำมันรั่ว/เศษสิ่งสกปรก)",
+                        "ตรวจสอบการติดตั้ง/จุดยึดเครื่องให้แน่นหนา",
+                        "ตรวจสอบถังน้ำมัน (ไม่มีรั่วซึม / สภาพสมบูรณ์)"
+                    ]
+                },
+                {
+                    title: "🛢️ 2. ระบบน้ำมันเชื้อเพลิง",
+                    items: [
+                        "เช็คระดับน้ำมันดีเซลในถัง (อยู่ในระดับพร้อมใช้งาน)",
+                        "ตรวจสอบรอยรั่วบริเวณท่อน้ำมัน",
+                        "เช็คการอุดตันของกรองน้ำมัน (ถ้ามองเห็นได้)"
+                    ]
+                },
+                {
+                    title: "⚙️ 3. ระบบหล่อเย็น (Coolant)",
+                    items: [
+                        "ตรวจสอบระดับน้ำหล่อเย็นในหม้อน้ำ/ถังพัก",
+                        "ตรวจสอบสายยางและรอยต่อว่ามีรั่วหรือเสื่อมหรือไม่",
+                        "ตรวจสอบพัดลมและสายพาน (สายไม่หย่อน/แตก)"
+                    ]
+                },
+                {
+                    title: "🔋 4. ระบบไฟฟ้าแบตเตอรี่",
+                    items: [
+                        "เช็คแรงดันแบตเตอรี่ (ควรอยู่ระหว่าง 12–14 โวลต์)",
+                        "ตรวจสอบขั้วแบตเตอรี่ (ไม่ขึ้นขี้เกลือ, แน่น)",
+                        "ตรวจสอบสายไฟและฟิวส์"
+                    ]
+                },
+                {
+                    title: "🚦 5. ระบบควบคุมและแผงสั่งงาน",
+                    items: [
+                        "ตรวจสอบไฟสถานะเครื่อง (Ready / Alarm / Fault)",
+                        "ตรวจสอบหน้าจอควบคุม (มี Error หรือไม่)",
+                        "ตรวจสอบตั้งค่า Auto/Manual (ควรอยู่ที่ Auto ถ้าเป็นระบบ Standby)"
+                    ]
+                },
+                {
+                    title: "🧪 6. ทดสอบการสตาร์ทเครื่อง (Weekly Test)",
+                    items: [
+                        "Start Manual 5-10 นาที โดยไม่โหลด (No Load Test)",
+                        "สังเกตเสียงการทำงาน (เรียบ/มีเสียงดังผิดปกติ)",
+                        "ตรวจสอบควันจากท่อไอเสีย (ไม่ดำหรือขาวผิดปกติ)",
+                        "ตรวจสอบค่าความดันน้ำมัน / อุณหภูมิ (ตามค่ามาตรฐานเครื่อง)"
+                    ]
+                }
+            ];
+
+            // Fire pump inspection categories
+            const firePumpInspectionCategories = [
+                {
+                    title: "🔧 1. ตรวจสอบทั่วไป (Visual Inspection)",
+                    items: [
+                        "ตรวจสอบสภาพตัวปั๊ม มอเตอร์ และอุปกรณ์โดยรอบ",
+                        "ตรวจสอบการยึดของฐานยึดปั๊ม (Foundation bolt)",
+                        "ตรวจสอบแนวท่อ/หน้าแปลน ไม่มีรอยรั่ว",
+                        "ตรวจสอบวาล์วที่เกี่ยวข้องอยู่ในตำแหน่งพร้อมใช้งาน"
+                    ]
+                },
+                {
+                    title: "⚙️ 2. ทดสอบการทำงาน (Start Manual Test)",
+                    items: [
+                        "ทดสอบ สตาร์ทเครื่องแบบ Manual (ควรทำงานได้ทันที)",
+                        "ตรวจสอบแรงดันขณะปั๊มทำงาน (Pressure Gauge)",
+                        "ตรวจสอบเสียงและการสั่น (ผิดปกติหรือไม่)",
+                        "ตรวจสอบควันและอุณหภูมิ (ถ้าเป็นเครื่องยนต์ดีเซล)"
+                    ]
+                },
+                {
+                    title: "🛢️ 3. ระบบน้ำมันเชื้อเพลิง (กรณีใช้เครื่องยนต์ดีเซล)",
+                    items: [
+                        "ตรวจสอบระดับน้ำมันในถัง (ควรเพียงพอสำหรับการทำงาน ≥ 2 ชั่วโมง)",
+                        "ตรวจสอบรอยรั่วของท่อน้ำมัน",
+                        "ตรวจสอบกรองน้ำมันไม่อุดตัน"
+                    ]
+                },
+                {
+                    title: "🧯 4. ระบบแบตเตอรี่และไฟฟ้า (กรณีใช้แบตเตอรี่สตาร์ท)",
+                    items: [
+                        "ตรวจสอบแรงดันแบตเตอรี่ (12–14V)",
+                        "ตรวจสอบขั้วแบตเตอรี่ไม่มีขี้เกลือ",
+                        "ตรวจสอบเครื่องชาร์จแบตเตอรี่อัตโนมัติทำงานหรือไม่"
+                    ]
+                },
+                {
+                    title: "💧 5. ระดับน้ำหล่อเย็น / น้ำในถังพัก",
+                    items: [
+                        "ตรวจสอบระดับน้ำในหม้อน้ำ (กรณีใช้ระบายความร้อนด้วยน้ำ)",
+                        "ตรวจสอบรอยรั่วของระบบหล่อเย็น",
+                        "ตรวจสอบพัดลม / สายพาน"
+                    ]
+                }
+            ];
+
+            // Generate generator inspection sections for each generator
+            const generatorSections = generatorData.map((generator, genIndex) => `
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg p-4 mb-6">
+                        <h3 class="text-xl font-bold">⚡ เครื่องกำเนิดไฟฟ้า ${generator.location}</h3>
+                        <p class="text-sm opacity-90">${generator.kva} - ${generator.manufacturer} ${generator.model}</p>
+                    </div>
+                    
+                    ${generatorInspectionCategories.map((category, catIndex) => `
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold mb-3 text-gray-800">${category.title}</h4>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                ${category.items.map((item, itemIndex) => `
+                                    <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-400">
+                                        <h5 class="font-medium mb-3 text-sm">${item}</h5>
+                                        <div class="flex space-x-4 mb-2">
+                                            <label class="flex items-center">
+                                                <input type="radio" name="gen-${genIndex}-cat-${catIndex}-item-${itemIndex}" value="normal" class="mr-2 text-green-500">
+                                                <span class="text-sm text-green-700 font-medium">ปกติ</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="radio" name="gen-${genIndex}-cat-${catIndex}-item-${itemIndex}" value="abnormal" class="mr-2 text-red-500">
+                                                <span class="text-sm text-red-700 font-medium">ผิดปกติ</span>
+                                            </label>
+                                        </div>
+                                        ${catIndex === 1 && itemIndex === 0 ? `
+                                            <div class="mt-2">
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">ระดับน้ำมัน (ลิตร)</label>
+                                                <input type="number" placeholder="ระดับน้ำมัน" max="${generator.fuelCapacity}" class="w-full border rounded px-2 py-1 text-sm">
+                                            </div>
+                                        ` : ''}
+                                        ${catIndex === 3 && itemIndex === 0 ? `
+                                            <div class="mt-2">
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">แรงดันแบตเตอรี่ (โวลต์)</label>
+                                                <input type="number" placeholder="12-14 V" min="10" max="16" step="0.1" class="w-full border rounded px-2 py-1 text-sm">
+                                            </div>
+                                        ` : ''}
+                                        ${catIndex === 5 && itemIndex === 3 ? `
+                                            <div class="mt-2 grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-600 mb-1">ความดันน้ำมัน (bar)</label>
+                                                    <input type="number" placeholder="ความดัน" step="0.1" class="w-full border rounded px-2 py-1 text-sm">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-600 mb-1">อุณหภูมิ (°C)</label>
+                                                    <input type="number" placeholder="อุณหภูมิ" class="w-full border rounded px-2 py-1 text-sm">
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        <textarea placeholder="หมายเหตุ / รายละเอียดเพิ่มเติม" class="w-full text-xs border rounded p-2 mt-2" rows="2"></textarea>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+
+            // Generate fire pump inspection sections for each fire pump
+            const firePumpSections = firePumpLocations.map((location, pumpIndex) => `
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div class="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg p-4 mb-6">
+                        <h3 class="text-xl font-bold">🚒 เครื่องสูบน้ำดับเพลิง ${location}</h3>
+                        <p class="text-sm opacity-90">Fire Pump System</p>
+                    </div>
+                    
+                    ${firePumpInspectionCategories.map((category, catIndex) => `
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold mb-3 text-gray-800">${category.title}</h4>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                ${category.items.map((item, itemIndex) => `
+                                    <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-400">
+                                        <h5 class="font-medium mb-3 text-sm">${item}</h5>
+                                        <div class="flex space-x-4 mb-2">
+                                            <label class="flex items-center">
+                                                <input type="radio" name="fire-${pumpIndex}-cat-${catIndex}-item-${itemIndex}" value="normal" class="mr-2 text-green-500">
+                                                <span class="text-sm text-green-700 font-medium">ปกติ</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="radio" name="fire-${pumpIndex}-cat-${catIndex}-item-${itemIndex}" value="abnormal" class="mr-2 text-red-500">
+                                                <span class="text-sm text-red-700 font-medium">ผิดปกติ</span>
+                                            </label>
+                                        </div>
+                                        ${catIndex === 1 && itemIndex === 1 ? `
+                                            <div class="mt-2">
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">แรงดันปั๊ม (bar)</label>
+                                                <input type="number" placeholder="แรงดัน" step="0.1" class="w-full border rounded px-2 py-1 text-sm">
+                                            </div>
+                                        ` : ''}
+                                        ${catIndex === 2 && itemIndex === 0 ? `
+                                            <div class="mt-2">
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">ระดับน้ำมัน (ลิตร)</label>
+                                                <input type="number" placeholder="ระดับน้ำมัน" class="w-full border rounded px-2 py-1 text-sm">
+                                            </div>
+                                        ` : ''}
+                                        ${catIndex === 3 && itemIndex === 0 ? `
+                                            <div class="mt-2">
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">แรงดันแบตเตอรี่ (โวลต์)</label>
+                                                <input type="number" placeholder="12-14 V" min="10" max="16" step="0.1" class="w-full border rounded px-2 py-1 text-sm">
+                                            </div>
+                                        ` : ''}
+                                        ${catIndex === 4 && itemIndex === 0 ? `
+                                            <div class="mt-2">
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">ระดับน้ำหล่อเย็น (%)</label>
+                                                <input type="number" placeholder="ระดับน้ำ" min="0" max="100" class="w-full border rounded px-2 py-1 text-sm">
+                                            </div>
+                                        ` : ''}
+                                        <textarea placeholder="หมายเหตุ / รายละเอียดเพิ่มเติม" class="w-full text-xs border rounded p-2 mt-2" rows="2"></textarea>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+
+            // Other equipment sections
+            const otherEquipmentSections = `
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg p-4 mb-6">
+                        <h3 class="text-xl font-bold">🏢 ระบบสูบน้ำประจำตึก</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${["ตรวจสอบความดันระบบ", "ทำความสะอาดถังเก็บน้ำ", "ตรวจสอบ Pressure Tank", "ตรวจสอบระบบ Auto Control", "ตรวจสอบคุณภาพน้ำ"].map((item, itemIndex) => `
+                            <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-400">
+                                <h4 class="font-medium mb-2 text-sm">${item}</h4>
+                                <div class="flex space-x-4 mb-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="water-system-${itemIndex}" value="normal" class="mr-1">
+                                        <span class="text-sm">ปกติ</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="water-system-${itemIndex}" value="abnormal" class="mr-1">
+                                        <span class="text-sm">ผิดปกติ</span>
+                                    </label>
+                                </div>
+                                <textarea placeholder="หมายเหตุ" class="w-full text-xs border rounded p-2" rows="2"></textarea>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            weeklyContainer.innerHTML = generatorSections + firePumpSections + otherEquipmentSections;
+        }
+
+        function populateGeneratorInventory() {
+            const inventoryContainer = document.getElementById('generator-inventory');
+            inventoryContainer.innerHTML = generatorData.map(gen => `
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-3">${gen.kva}</td>
+                    <td class="border border-gray-300 px-4 py-3">${gen.location}</td>
+                    <td class="border border-gray-300 px-4 py-3">${gen.fuelCapacity}</td>
+                    <td class="border border-gray-300 px-4 py-3">${gen.manufacturer}</td>
+                    <td class="border border-gray-300 px-4 py-3">${gen.model}</td>
+                    <td class="border border-gray-300 px-4 py-3">${gen.provider}</td>
+                </tr>
+            `).join('');
+        }
+
+        function populateElevatorInventory() {
+            const elevatorContainer = document.getElementById('elevator-inventory');
+            elevatorContainer.innerHTML = elevatorData.map(elevator => `
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-3">${elevator.location}</td>
+                    <td class="border border-gray-300 px-4 py-3">${elevator.type}</td>
+                    <td class="border border-gray-300 px-4 py-3">${elevator.manufacturer}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateIncidentLocationOptions() {
+            const typeSelect = document.getElementById('incident-type');
+            const locationSelect = document.getElementById('incident-location');
+            
+            typeSelect.addEventListener('change', function() {
+                locationSelect.innerHTML = '<option value="">เลือกแผนก/สถานที่</option>';
+                
+                if (this.value === 'generator') {
+                    generatorData.forEach(gen => {
+                        locationSelect.innerHTML += `<option value="${gen.location}">${gen.location}</option>`;
+                    });
+                } else if (this.value === 'fire-pump') {
+                    firePumpLocations.forEach(location => {
+                        locationSelect.innerHTML += `<option value="${location}">${location}</option>`;
+                    });
+                } else if (this.value === 'water-pump') {
+                    waterPumpLocations.forEach(location => {
+                        locationSelect.innerHTML += `<option value="${location}">${location}</option>`;
+                    });
+                } else if (this.value === 'elevator') {
+                    const uniqueLocations = [...new Set(elevatorData.map(elevator => elevator.location))];
+                    uniqueLocations.forEach(location => {
+                        locationSelect.innerHTML += `<option value="${location}">${location}</option>`;
+                    });
+                } else if (this.value === 'electrical' || this.value === 'plumbing' || this.value === 'air-conditioning') {
+                    departmentLocations.forEach(location => {
+                        locationSelect.innerHTML += `<option value="${location}">${location}</option>`;
+                    });
+                }
+            });
+        }
+
+        async function saveDailyInspection() {
+            const date = document.getElementById('daily-date').value;
+            const shift = document.getElementById('shift-select').value;
+            
+            // Collect all inspection data
+            const inspectionData = {
+                date: date,
+                shift: shift,
+                waterPumps: [],
+                firePumps: [],
+                generators: [],
+                timestamp: new Date().toISOString(),
+                type: 'daily'
+            };
+
+            try {
+                // Save to Firebase Firestore
+                await db.collection('inspections').add(inspectionData);
+                
+                // Also save to localStorage as backup
+                const existingData = JSON.parse(localStorage.getItem('dailyInspections') || '[]');
+                existingData.push(inspectionData);
+                localStorage.setItem('dailyInspections', JSON.stringify(existingData));
+
+                showSuccessModal('บันทึกการตรวจเช็ครายวันสำเร็จ! ข้อมูลถูกส่งไปยัง Firebase แล้ว');
+            } catch (error) {
+                console.error('Error saving to Firebase:', error);
+                // Fallback to localStorage only
+                const existingData = JSON.parse(localStorage.getItem('dailyInspections') || '[]');
+                existingData.push(inspectionData);
+                localStorage.setItem('dailyInspections', JSON.stringify(existingData));
+                
+                showSuccessModal('บันทึกการตรวจเช็ครายวันสำเร็จ! (บันทึกในเครื่องเท่านั้น)');
+            }
+        }
+
+        async function saveWeeklyInspection() {
+            const week = document.getElementById('weekly-date').value;
+            
+            const inspectionData = {
+                week: week,
+                timestamp: new Date().toISOString(),
+                type: 'weekly'
+            };
+
+            try {
+                // Save to Firebase Firestore
+                await db.collection('inspections').add(inspectionData);
+                
+                // Also save to localStorage as backup
+                const existingData = JSON.parse(localStorage.getItem('weeklyInspections') || '[]');
+                existingData.push(inspectionData);
+                localStorage.setItem('weeklyInspections', JSON.stringify(existingData));
+
+                showSuccessModal('บันทึกการตรวจเช็ครายสัปดาห์สำเร็จ! ข้อมูลถูกส่งไปยัง Firebase แล้ว');
+            } catch (error) {
+                console.error('Error saving to Firebase:', error);
+                // Fallback to localStorage only
+                const existingData = JSON.parse(localStorage.getItem('weeklyInspections') || '[]');
+                existingData.push(inspectionData);
+                localStorage.setItem('weeklyInspections', JSON.stringify(existingData));
+                
+                showSuccessModal('บันทึกการตรวจเช็ครายสัปดาห์สำเร็จ! (บันทึกในเครื่องเท่านั้น)');
+            }
+        }
+
+        // Incident form handling
+        document.getElementById('incident-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const incidentData = {
+                id: Date.now(),
+                date: document.getElementById('incident-date').value,
+                type: document.getElementById('incident-type').value,
+                location: document.getElementById('incident-location').value,
+                severity: document.getElementById('incident-severity').value,
+                repairTime: document.getElementById('repair-time').value,
+                description: document.getElementById('incident-description').value,
+                action: document.getElementById('incident-action').value,
+                status: document.getElementById('incident-status').value,
+                repairSender: document.getElementById('repair-sender').value,
+                reporter: document.getElementById('incident-reporter').value,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                // Save to Firebase Firestore
+                await db.collection('incidents').add(incidentData);
+                
+                // Also save to localStorage as backup
+                const existingIncidents = JSON.parse(localStorage.getItem('incidents') || '[]');
+                existingIncidents.unshift(incidentData);
+                localStorage.setItem('incidents', JSON.stringify(existingIncidents));
+
+                this.reset();
+                loadIncidentHistory();
+                showSuccessModal('บันทึกรายงานเหตุการณ์สำเร็จ! ข้อมูลถูกส่งไปยัง Firebase แล้ว');
+            } catch (error) {
+                console.error('Error saving incident to Firebase:', error);
+                // Fallback to localStorage only
+                const existingIncidents = JSON.parse(localStorage.getItem('incidents') || '[]');
+                existingIncidents.unshift(incidentData);
+                localStorage.setItem('incidents', JSON.stringify(existingIncidents));
+
+                this.reset();
+                loadIncidentHistory();
+                showSuccessModal('บันทึกรายงานเหตุการณ์สำเร็จ! (บันทึกในเครื่องเท่านั้น)');
+            }
+        });
+
+        async function loadIncidentHistory() {
+            const historyContainer = document.getElementById('incident-history');
+            let incidents = [];
+
+            try {
+                // Try to load from Firebase first
+                const snapshot = await db.collection('incidents')
+                    .orderBy('timestamp', 'desc')
+                    .limit(10)
+                    .get();
+                
+                incidents = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // If no Firebase data, fallback to localStorage
+                if (incidents.length === 0) {
+                    incidents = JSON.parse(localStorage.getItem('incidents') || '[]');
+                }
+            } catch (error) {
+                console.error('Error loading from Firebase:', error);
+                // Fallback to localStorage
+                incidents = JSON.parse(localStorage.getItem('incidents') || '[]');
+            }
+            
+            if (incidents.length === 0) {
+                historyContainer.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีรายงานเหตุการณ์</p>';
+                return;
+            }
+
+            historyContainer.innerHTML = incidents.slice(0, 10).map(incident => {
+                const severityColors = {
+                    low: 'bg-green-100 text-green-800',
+                    medium: 'bg-yellow-100 text-yellow-800',
+                    high: 'bg-orange-100 text-orange-800',
+                    critical: 'bg-red-100 text-red-800'
+                };
+
+                const statusColors = {
+                    'in-progress': 'bg-blue-100 text-blue-800',
+                    'forwarded': 'bg-purple-100 text-purple-800',
+                    'waiting': 'bg-orange-100 text-orange-800',
+                    'completed': 'bg-green-100 text-green-800'
+                };
+
+                const statusText = {
+                    'in-progress': 'กำลังดำเนินการ',
+                    'forwarded': 'ส่งต่อ',
+                    'waiting': 'รออนุมัติ',
+                    'completed': 'เสร็จสิ้น'
+                };
+
+                const typeText = {
+                    'generator': 'เครื่องกำเนิดไฟฟ้า',
+                    'fire-pump': 'เครื่องสูบน้ำดับเพลิง',
+                    'water-pump': 'ระบบสูบน้ำประจำตึก',
+                    'elevator': 'ลิฟต์',
+                    'electrical': 'ระบบไฟฟ้า',
+                    'plumbing': 'ระบบประปา',
+                    'air-conditioning': 'เครื่องปรับอากาศ'
+                };
+
+                return `
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold">${incident.location} - ${typeText[incident.type] || incident.type}</h4>
+                            <div class="flex space-x-2">
+                                <span class="px-2 py-1 rounded text-xs ${severityColors[incident.severity]}">${incident.severity}</span>
+                                <span class="px-2 py-1 rounded text-xs ${statusColors[incident.status] || 'bg-gray-100 text-gray-800'}">${statusText[incident.status] || incident.status}</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">${incident.description}</p>
+                        ${incident.action ? `<p class="text-sm text-blue-600 mb-2"><strong>การแก้ไข:</strong> ${incident.action}</p>` : ''}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500 mb-2">
+                            ${incident.repairTime ? `<span>⏱️ เวลาแก้ไข: ${incident.repairTime} นาที</span>` : ''}
+                            ${incident.repairSender ? `<span>🔧 ผู้ส่งซ่อม: ${incident.repairSender}</span>` : ''}
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <span>รายงานโดย: ${incident.reporter}</span> | 
+                            <span>${new Date(incident.date).toLocaleString('th-TH')}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showSuccessModal(message) {
+            document.getElementById('success-message').textContent = message;
+            document.getElementById('success-modal').classList.remove('hidden');
+            document.getElementById('success-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+            document.getElementById('success-modal').classList.remove('flex');
+        }
+
+        // Load incident history on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadIncidentHistory();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967afb37b6f3ee62',t:'MTc1Mzk0MjczNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
